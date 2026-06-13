@@ -5,6 +5,9 @@ build/
 # 生成的产物（保留目录，具体输出不入库）
 outputs/*
 !outputs/.gitkeep
+# basic 场景集是固化的默认数据集，需入库（任务二默认路由）
+!outputs/basic/
+!outputs/basic/**
 
 # 系统 / 编辑器
 .DS_Store

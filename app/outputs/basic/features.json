@@ -1,0 +1,1874 @@
+{
+  "generator": "scenario_generator.extract_features",
+  "model": "deepseek-v4-flash",
+  "feature_points": [
+    {
+      "id": "board-view-display-lists-cards",
+      "module": "board-view",
+      "name": "看板视图展示列表和卡片",
+      "description": "进入看板视图后，页面展示经典的 Kanban 板，包含列表（Lists）和卡片（Cards）。",
+      "source_files": [
+        "board-view.md"
+      ],
+      "source_section": "Board View",
+      "key_elements": [
+        "看板视图页面",
+        "列表列",
+        "卡片"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "admin-user-settings-access",
+      "module": "Administration and settings",
+      "name": "访问用户设置",
+      "description": "通过点击头像/姓名展开菜单，再点击齿轮图标进入用户设置面板",
+      "source_files": [
+        "admin-settings.md"
+      ],
+      "source_section": "Dashboard access to settings",
+      "key_elements": [
+        "用户头像/姓名",
+        "齿轮图标"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "admin-instance-settings-access",
+      "module": "Administration and settings",
+      "name": "访问实例设置",
+      "description": "管理员通过点击用户图标进入实例设置面板",
+      "source_files": [
+        "admin-settings.md"
+      ],
+      "source_section": "Dashboard access to settings",
+      "key_elements": [
+        "用户图标"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "admin-settings-sidebar-toggle",
+      "module": "Administration and settings",
+      "name": "切换设置侧边栏",
+      "description": "通过点击条杠箭头图标隐藏或显示设置侧边栏",
+      "source_files": [
+        "admin-settings.md"
+      ],
+      "source_section": "Dashboard access to settings",
+      "key_elements": [
+        "条杠箭头图标"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "account-register-email",
+      "module": "account",
+      "name": "通过邮箱注册",
+      "description": "用户使用邮箱地址和密码创建新帐户",
+      "source_files": [
+        "account.md"
+      ],
+      "source_section": "Installation and creating an account",
+      "key_elements": [
+        "Create an account button",
+        "邮箱输入框",
+        "密码输入框",
+        "确认密码输入框",
+        "Terms of service复选框",
+        "Privacy Policy复选框"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "account-register-sso",
+      "module": "account",
+      "name": "通过SSO注册",
+      "description": "用户使用SSO提供者（Google、Microsoft、GitHub、OIDC）创建新帐户",
+      "source_files": [
+        "account.md"
+      ],
+      "source_section": "Installation and creating an account",
+      "key_elements": [
+        "SSO登录按钮",
+        "Google",
+        "Microsoft",
+        "GitHub",
+        "OIDC"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "import-from-trello",
+      "module": "import-export",
+      "name": "从Trello导入看板",
+      "description": "用户通过上传Trello导出的JSON文件创建新看板，并选择项目，完成导入。",
+      "source_files": [
+        "import-export.md"
+      ],
+      "source_section": "Import from Trello",
+      "key_elements": [
+        "创建新看板",
+        "选择导入",
+        "选择Trello JSON文件",
+        "命名新看板",
+        "选择所属项目"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "import-from-4gaboards",
+      "module": "import-export",
+      "name": "从4ga Boards导入看板",
+      "description": "用户通过上传4ga Boards导出的tgz文件创建新看板，并选择项目，还可选择添加项目管理员和为不存在的用户创建账号。",
+      "source_files": [
+        "import-export.md"
+      ],
+      "source_section": "Import from 4ga Boards",
+      "key_elements": [
+        "创建新看板",
+        "选择导入",
+        "选择4ga Boards tgz文件",
+        "命名新看板",
+        "选择所属项目",
+        "添加项目管理员选项",
+        "为不存在的用户创建账号选项"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "export-board",
+      "module": "import-export",
+      "name": "导出看板",
+      "description": "用户通过看板上下文菜单选择导出，保存为tgz文件。",
+      "source_files": [
+        "import-export.md"
+      ],
+      "source_section": "Export",
+      "key_elements": [
+        "看板上下文菜单",
+        "导出看板选项",
+        "保存tgz文件"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "instance-users-list",
+      "module": "instance-settings",
+      "name": "用户列表展示",
+      "description": "在表格中展示所有用户的关键信息，并支持调整列显示、列宽和内容适配",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Users",
+      "key_elements": [
+        "用户表格",
+        "列名",
+        "列分隔符",
+        "显示/隐藏列选项"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "instance-add-user",
+      "module": "instance-settings",
+      "name": "添加用户",
+      "description": "手动添加新用户，填写邮箱、密码、姓名和可选用户名",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Users",
+      "key_elements": [
+        "添加用户按钮",
+        "邮箱输入框",
+        "密码输入框",
+        "姓名输入框",
+        "用户名输入框"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "instance-edit-user",
+      "module": "instance-settings",
+      "name": "编辑用户信息",
+      "description": "通过铅笔图标修改任意用户的个人设置，无需当前密码",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Users",
+      "key_elements": [
+        "铅笔图标",
+        "用户个人设置",
+        "保存按钮"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "instance-grant-admin",
+      "module": "instance-settings",
+      "name": "授予/撤销管理员权限",
+      "description": "通过切换开关为用户授予或撤销管理员权限",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Users",
+      "key_elements": [
+        "管理员开关",
+        "用户行"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "instance-view-activity-log",
+      "module": "instance-settings",
+      "name": "查看用户活动日志",
+      "description": "查看指定用户的全部操作日志",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Users",
+      "key_elements": [
+        "活动日志按钮",
+        "用户活动日志列表"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "instance-registration-toggle",
+      "module": "instance-settings",
+      "name": "用户注册总开关",
+      "description": "启用或禁用新用户注册，关闭后只能由管理员手动添加",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Instance options",
+      "key_elements": [
+        "用户注册开关"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "instance-local-registration",
+      "module": "instance-settings",
+      "name": "本地用户注册开关",
+      "description": "允许新用户使用邮箱和密码注册",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Instance options",
+      "key_elements": [
+        "本地用户注册开关"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "instance-sso-registration",
+      "module": "instance-settings",
+      "name": "SSO用户注册开关",
+      "description": "允许新用户通过SSO注册",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Instance options",
+      "key_elements": [
+        "SSO用户注册开关"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "instance-project-creation",
+      "module": "instance-settings",
+      "name": "项目创建权限控制",
+      "description": "启用或禁用所有用户创建项目，禁用后仅管理员可创建",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Instance options",
+      "key_elements": [
+        "项目创建所有用户开关"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "instance-sync-sso-data",
+      "module": "instance-settings",
+      "name": "SSO数据同步开关",
+      "description": "启用或禁用认证时从SSO提供者同步用户数据",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Instance options",
+      "key_elements": [
+        "同步SSO数据开关"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "instance-sync-sso-admin",
+      "module": "instance-settings",
+      "name": "SSO管理员同步开关",
+      "description": "启用后根据SSO数据自动授予或撤销管理员权限",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Instance options",
+      "key_elements": [
+        "同步SSO管理员开关"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "instance-allowed-domains",
+      "module": "instance-settings",
+      "name": "允许注册域名列表",
+      "description": "设置分号分隔的允许注册邮箱域名，留空允许所有域名",
+      "source_files": [
+        "instance-settings.md"
+      ],
+      "source_section": "Instance options",
+      "key_elements": [
+        "允许注册域名输入框"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "board-create",
+      "module": "board",
+      "name": "创建看板",
+      "description": "用户通过不同入口创建新看板，可命名、选择模板或导入数据",
+      "source_files": [
+        "board.md"
+      ],
+      "source_section": "Creating a new board",
+      "key_elements": [
+        "+Add Board 按钮（顶部右上角、侧边栏底部、项目三点菜单）",
+        "Board name 输入框",
+        "模板选择（Simple/Kanban）",
+        "导入 CSV 或 JSON 文件"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "board-edit",
+      "module": "board",
+      "name": "编辑看板",
+      "description": "用户通过侧边栏省略号菜单编辑看板属性（如名称）",
+      "source_files": [
+        "board.md"
+      ],
+      "source_section": "Board additional options",
+      "key_elements": [
+        "侧边栏省略号菜单",
+        "编辑按钮"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "board-delete",
+      "module": "board",
+      "name": "删除看板",
+      "description": "用户通过侧边栏省略号菜单删除看板",
+      "source_files": [
+        "board.md"
+      ],
+      "source_section": "Board additional options",
+      "key_elements": [
+        "侧边栏省略号菜单",
+        "删除按钮"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "board-reorder",
+      "module": "board",
+      "name": "拖拽排序看板",
+      "description": "用户通过拖拽侧边栏中的双向箭头按钮改变看板顺序",
+      "source_files": [
+        "board.md"
+      ],
+      "source_section": "Board additional options",
+      "key_elements": [
+        "侧边栏中看板名称左侧的双向箭头拖拽手柄"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "board-export-csv",
+      "module": "board",
+      "name": "导出看板为CSV",
+      "description": "用户通过侧边栏省略号菜单将看板数据导出为CSV文件",
+      "source_files": [
+        "board.md"
+      ],
+      "source_section": "Board additional options",
+      "key_elements": [
+        "侧边栏省略号菜单",
+        "导出 CSV 选项"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "board-github-integration",
+      "module": "board",
+      "name": "设置GitHub集成",
+      "description": "用户通过工具栏GitHub图标配置与GitHub的集成",
+      "source_files": [
+        "board.md"
+      ],
+      "source_section": "Board toolbar",
+      "key_elements": [
+        "工具栏中的 GitHub 图标"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "id": "board-view-toggle",
+      "module": "board",
+      "name": "切换看板视图",
+      "description": "用户在工具栏中切换看板视图（看板视图/列表视图）",
+      "source_files": [
+        "board.md"
+      ],
+      "source_section": "Board toolbar",
+      "key_elements": [
+        "工具栏中的视图切换按钮",
+        "Board view 选项",
+        "List view 选项"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "board-filter",
+      "module": "board",
+      "name": "过滤卡片",
+      "description": "用户通过过滤框按大小写、任意匹配、成员、标签、截止日期等条件过滤卡片",
+      "source_files": [
+        "board.md"
+      ],
+      "source_section": "Board Filtering",
+      "key_elements": [
+        "Filter cards 输入框",
+        "Aa (Match Case) 按钮及快捷键 Alt+C",
+        "~ (Any Match) 按钮及快捷键 Alt+V",
+        "按成员过滤选择器",
+        "按标签过滤选择器",
+        "按截止日期过滤选择器",
+        "Show Cards Just For Selected Day 选项"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "board-manage-members",
+      "module": "board",
+      "name": "管理看板成员",
+      "description": "用户通过工具栏添加、删除或修改看板成员的权限（项目管理员、编辑者、评论者、查看者）",
+      "source_files": [
+        "board.md"
+      ],
+      "source_section": "Board toolbar & Board permissions",
+      "key_elements": [
+        "工具栏 +Add member 图标",
+        "成员头像图标（点击可修改权限或删除）",
+        "权限选择（Project manager/Editor/Commenter/Viewer）"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "notifications-open-panel",
+      "module": "Notifications",
+      "name": "打开/关闭通知面板",
+      "description": "点击顶部铃铛图标打开通知面板，点击面板外区域关闭",
+      "source_files": [
+        "notifications.md"
+      ],
+      "source_section": "Notifications and Notification Center",
+      "key_elements": [
+        "bell icon",
+        "notification panel"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "notifications-mark-read-unread",
+      "module": "Notifications",
+      "name": "标记通知为已读/未读",
+      "description": "点击通知上的眼睛图标切换已读/未读状态",
+      "source_files": [
+        "notifications.md"
+      ],
+      "source_section": "Notifications and Notification Center",
+      "key_elements": [
+        "eye icon",
+        "crossed eye icon",
+        "notification dimming"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "notifications-delete-single",
+      "module": "Notifications",
+      "name": "删除单个通知",
+      "description": "点击通知上的垃圾桶图标删除该通知",
+      "source_files": [
+        "notifications.md"
+      ],
+      "source_section": "Notifications and Notification Center",
+      "key_elements": [
+        "bin icon"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "notifications-bulk-actions",
+      "module": "Notifications",
+      "name": "批量操作通知",
+      "description": "通过省略号菜单执行标记所有为已读/未读、删除所有、删除已读等操作",
+      "source_files": [
+        "notifications.md"
+      ],
+      "source_section": "Notifications and Notification Center",
+      "key_elements": [
+        "ellipsis icon",
+        "mark all read",
+        "mark all unread",
+        "delete all",
+        "delete read"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "notifications-filter",
+      "module": "Notifications",
+      "name": "过滤通知列表",
+      "description": "使用过滤框和双箭头图标切换过滤类型：全部、项目、看板、用户、卡片、文本/活动类型",
+      "source_files": [
+        "notifications.md"
+      ],
+      "source_section": "Notifications and Notification Center",
+      "key_elements": [
+        "filter box",
+        "double arrow icon",
+        "All",
+        "Project",
+        "Board",
+        "User",
+        "Card",
+        "Text/type of activity"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "notifications-fullscreen-center",
+      "module": "Notifications",
+      "name": "打开全屏通知中心",
+      "description": "点击省略号左侧的图标进入全屏通知中心，详细查看所有通知",
+      "source_files": [
+        "notifications.md"
+      ],
+      "source_section": "Notifications and Notification Center",
+      "key_elements": [
+        "icon left of ellipsis",
+        "fullscreen Notification Center"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "notifications-activity-log-open",
+      "module": "Notifications",
+      "name": "打开活动日志弹窗",
+      "description": "在元素（如看板、列表、卡片等）的省略号菜单中选择检查活动，查看活动日志",
+      "source_files": [
+        "notifications.md"
+      ],
+      "source_section": "Activity Check Log",
+      "key_elements": [
+        "ellipsis icon",
+        "check activity option",
+        "Activity Log popup"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "project-settings-access",
+      "module": "project-settings",
+      "name": "访问项目设置",
+      "description": "通过顶部齿轮图标或侧边栏项目省略号菜单进入项目设置页面",
+      "source_files": [
+        "project-settings.md"
+      ],
+      "source_section": "Project Settings",
+      "key_elements": [
+        "齿轮图标",
+        "省略号菜单"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "project-settings-edit-title",
+      "module": "project-settings",
+      "name": "修改项目标题",
+      "description": "在设置页面编辑项目标题并点击Save按钮保存更改",
+      "source_files": [
+        "project-settings.md"
+      ],
+      "source_section": "Project Settings",
+      "key_elements": [
+        "标题输入框",
+        "Save按钮"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "project-settings-manage-managers",
+      "module": "project-settings",
+      "name": "管理项目成员（添加/移除管理者）",
+      "description": "在设置页面添加或移除项目的管理者（经理）",
+      "source_files": [
+        "project-settings.md"
+      ],
+      "source_section": "Project Settings",
+      "key_elements": [
+        "添加管理者按钮",
+        "移除管理者按钮",
+        "管理者列表"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "project-settings-set-background",
+      "module": "project-settings",
+      "name": "设置项目背景图片",
+      "description": "从预设背景中选择或上传自定义图片作为项目视图的背景",
+      "source_files": [
+        "project-settings.md"
+      ],
+      "source_section": "Project Settings",
+      "key_elements": [
+        "背景图片选择区域",
+        "上传按钮"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "project-settings-delete-project",
+      "module": "project-settings",
+      "name": "删除项目",
+      "description": "在Danger Zone中点击Delete Project按钮，并通过确认弹窗删除项目",
+      "source_files": [
+        "project-settings.md"
+      ],
+      "source_section": "Project Settings",
+      "key_elements": [
+        "Delete Project按钮",
+        "确认弹窗"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "id": "project-settings-navigate-back",
+      "module": "project-settings",
+      "name": "返回项目视图",
+      "description": "点击右上角箭头图标或4ga Boards Logo返回项目视图",
+      "source_files": [
+        "project-settings.md"
+      ],
+      "source_section": "Project Settings",
+      "key_elements": [
+        "箭头图标",
+        "4ga Boards Logo"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-view-adjust-column-width",
+      "module": "List View",
+      "name": "调整列宽",
+      "description": "通过拖拽列分隔线调整列表视图中的列宽度",
+      "source_files": [
+        "list-view.md"
+      ],
+      "source_section": "List view navigation",
+      "key_elements": [
+        "列分隔线",
+        "拖拽"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-view-column-visibility",
+      "module": "List View",
+      "name": "添加/移除列",
+      "description": "通过右上角省略号菜单选择要显示的列或隐藏",
+      "source_files": [
+        "list-view.md"
+      ],
+      "source_section": "List view navigation",
+      "key_elements": [
+        "Ellipsis菜单",
+        "列选择复选框"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "list-view-reset-default-columns",
+      "module": "List View",
+      "name": "重置列选择为默认",
+      "description": "通过菜单重置列显示配置为默认值",
+      "source_files": [
+        "list-view.md"
+      ],
+      "source_section": "List view navigation",
+      "key_elements": [
+        "Ellipsis菜单",
+        "重置选项"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "list-view-column-fit",
+      "module": "List View",
+      "name": "设置列适应内容或屏幕",
+      "description": "设置列宽度自动适应内容或屏幕宽度",
+      "source_files": [
+        "list-view.md"
+      ],
+      "source_section": "List view navigation",
+      "key_elements": [
+        "Ellipsis菜单",
+        "适应内容选项",
+        "适应屏幕选项"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "list-view-single-sort",
+      "module": "List View",
+      "name": "单列排序",
+      "description": "点击列头对列表进行按单列升序或降序排序",
+      "source_files": [
+        "list-view.md"
+      ],
+      "source_section": "List view features",
+      "key_elements": [
+        "列头",
+        "箭头图标",
+        "升序",
+        "降序"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-view-multi-sort",
+      "module": "List View",
+      "name": "多级排序",
+      "description": "选择多个列进行分层排序，并设置排序优先级",
+      "source_files": [
+        "list-view.md"
+      ],
+      "source_section": "List view features",
+      "key_elements": [
+        "列头排序指示器",
+        "排序优先级数字",
+        "多列选择"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "list-view-pagination",
+      "module": "List View",
+      "name": "分页浏览",
+      "description": "设置每页显示的卡片数量以及翻页浏览",
+      "source_files": [
+        "list-view.md"
+      ],
+      "source_section": "List view navigation",
+      "key_elements": [
+        "每页数量选择器",
+        "翻页箭头"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-view-add-list-card",
+      "module": "List View",
+      "name": "添加列表和卡片",
+      "description": "在列表视图底部通过相应按钮添加列表或卡片，并同步到看板视图",
+      "source_files": [
+        "list-view.md"
+      ],
+      "source_section": "List view navigation",
+      "key_elements": [
+        "添加List按钮",
+        "添加Card按钮"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-view-open-card-by-clicking-row",
+      "module": "List View",
+      "name": "点击行打开卡片",
+      "description": "在列表视图中点击卡片行空白处打开卡片详情",
+      "source_files": [
+        "list-view.md"
+      ],
+      "source_section": "List view navigation",
+      "key_elements": [
+        "卡片行空白区域",
+        "卡片详情弹出"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-view-sync-board",
+      "module": "List View",
+      "name": "列表视图与看板视图同步",
+      "description": "在列表视图或看板视图中做的所有更改（如添加卡片、编辑属性）在两个视图间实时同步",
+      "source_files": [
+        "list-view.md"
+      ],
+      "source_section": "List View",
+      "key_elements": [
+        "看板视图",
+        "列表视图",
+        "数据同步"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "id": "list-drag-move",
+      "module": "List",
+      "name": "拖拽移动列表",
+      "description": "在同一看板内通过拖拽改变列表的排列顺序",
+      "source_files": [
+        "list.md"
+      ],
+      "source_section": "List navigation",
+      "key_elements": [
+        "列表",
+        "拖拽"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-horizontal-scroll",
+      "module": "List",
+      "name": "水平滚动浏览列表",
+      "description": "当列表过多超出窗口时，通过Shift+滚动、拖拽空白区域或底部滚动条水平移动视图",
+      "source_files": [
+        "list.md"
+      ],
+      "source_section": "List navigation",
+      "key_elements": [
+        "Shift+Scroll",
+        "手形图标",
+        "底部滚动条"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-vertical-scroll",
+      "module": "List",
+      "name": "垂直滚动浏览列表内卡片",
+      "description": "当列表卡片过多时，通过鼠标滚轮或列表右侧滚动条滚动查看",
+      "source_files": [
+        "list.md"
+      ],
+      "source_section": "List navigation",
+      "key_elements": [
+        "鼠标滚轮",
+        "列表右侧滚动条"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-toggle-visibility",
+      "module": "List",
+      "name": "隐藏/显示列表",
+      "description": "点击列表左上角的三角形按钮切换列表的可见性，隐藏时显示卡片数量",
+      "source_files": [
+        "list.md"
+      ],
+      "source_section": "List navigation",
+      "key_elements": [
+        "三角形按钮",
+        "列表名称左侧"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-create",
+      "module": "List",
+      "name": "创建列表",
+      "description": "点击'+add list'按钮，输入名称并确认添加列表；自动弹出下一个创建窗口可取消",
+      "source_files": [
+        "list.md"
+      ],
+      "source_section": "Creating, editing and deleting the list",
+      "key_elements": [
+        "+add list按钮",
+        "Add List按钮",
+        "Cancel"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-context-menu",
+      "module": "List",
+      "name": "使用列表上下文菜单",
+      "description": "点击列表右上角的省略号打开上下文菜单，可添加卡片、删除列表（需确认）、查看活动",
+      "source_files": [
+        "list.md"
+      ],
+      "source_section": "Creating, editing and deleting the list",
+      "key_elements": [
+        "省略号",
+        "Add Card",
+        "Delete List",
+        "确认弹窗",
+        "Activity"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "list-view-list-column",
+      "module": "List",
+      "name": "在列表视图中查看和更改所属列表",
+      "description": "在列表视图中，通过‘List’列查看卡片所属列表，并点击该列更改卡片列表",
+      "source_files": [
+        "list.md"
+      ],
+      "source_section": "List in list view",
+      "key_elements": [
+        "List列",
+        "卡片行"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "shortcuts-save-text",
+      "module": "shortcuts",
+      "name": "使用快捷键保存文本",
+      "description": "使用Ctrl+Enter快捷保存文本编辑（描述、评论、添加任务），创建卡片时自动打开卡片视图。",
+      "source_files": [
+        "shortcuts.md"
+      ],
+      "source_section": "# Useful Shortcuts",
+      "key_elements": [
+        "Ctrl+Enter",
+        "保存",
+        "自动打开卡片视图"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "shortcuts-create-multiple-cards",
+      "module": "shortcuts",
+      "name": "使用快捷键快速创建多个卡片",
+      "description": "使用Shift+Enter在添加新卡片时快速创建多个卡片。",
+      "source_files": [
+        "shortcuts.md"
+      ],
+      "source_section": "# Useful Shortcuts",
+      "key_elements": [
+        "Shift+Enter",
+        "创建多个卡片"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "shortcuts-horizontal-scroll",
+      "module": "shortcuts",
+      "name": "使用快捷键水平滚动看板",
+      "description": "按住Shift并滚动鼠标滚轮水平滚动看板，适用于列表过多时。",
+      "source_files": [
+        "shortcuts.md"
+      ],
+      "source_section": "# Useful Shortcuts",
+      "key_elements": [
+        "Shift+Scroll",
+        "水平滚动"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "shortcuts-switch-filter-type",
+      "module": "shortcuts",
+      "name": "使用快捷键切换筛选类型",
+      "description": "在输入时按Tab键在通知和侧边栏筛选类型之间切换。",
+      "source_files": [
+        "shortcuts.md"
+      ],
+      "source_section": "# Useful Shortcuts",
+      "key_elements": [
+        "Tab",
+        "切换筛选类型"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "project-view-list",
+      "module": "Project",
+      "name": "查看项目列表",
+      "description": "用户能在dashboard视图或侧边栏中查看所有项目的列表",
+      "source_files": [
+        "project.md"
+      ],
+      "source_section": "",
+      "key_elements": [
+        "dashboard视图",
+        "侧边栏"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "project-create",
+      "module": "Project",
+      "name": "创建项目",
+      "description": "用户通过点击'+Add project'按钮，在弹出的命名提示框中输入项目名称来创建新项目",
+      "source_files": [
+        "project.md"
+      ],
+      "source_section": "",
+      "key_elements": [
+        "+Add project按钮",
+        "命名提示框"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "project-open-context-menu",
+      "module": "Project",
+      "name": "打开项目上下文菜单",
+      "description": "用户将鼠标悬停在项目名称上，点击省略号按钮以打开上下文菜单",
+      "source_files": [
+        "project.md"
+      ],
+      "source_section": "",
+      "key_elements": [
+        "项目名称",
+        "省略号按钮",
+        "上下文菜单"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "project-rename",
+      "module": "Project",
+      "name": "重命名项目",
+      "description": "用户在上下文菜单中点击重命名选项，修改项目名称",
+      "source_files": [
+        "project.md"
+      ],
+      "source_section": "",
+      "key_elements": [
+        "上下文菜单",
+        "重命名选项",
+        "名称输入框"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "project-settings",
+      "module": "Project",
+      "name": "进入项目设置",
+      "description": "用户在上下文菜单中点击设置选项，跳转到项目设置页面",
+      "source_files": [
+        "project.md"
+      ],
+      "source_section": "",
+      "key_elements": [
+        "上下文菜单",
+        "设置选项",
+        "项目设置页面"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "project-activity",
+      "module": "Project",
+      "name": "查看项目活动",
+      "description": "用户在上下文菜单中点击活动选项，查看项目的创建时间和最后更新时间",
+      "source_files": [
+        "project.md"
+      ],
+      "source_section": "",
+      "key_elements": [
+        "上下文菜单",
+        "活动选项",
+        "活动信息"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "project-add-board",
+      "module": "Project",
+      "name": "添加新看板",
+      "description": "用户在上下文菜单中点击添加看板选项，创建新的看板",
+      "source_files": [
+        "project.md"
+      ],
+      "source_section": "",
+      "key_elements": [
+        "上下文菜单",
+        "添加看板选项"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "project-enter-board",
+      "module": "Project",
+      "name": "进入看板视图",
+      "description": "用户通过点击项目磁贴或侧边栏中的项目名称，进入该项目的看板视图",
+      "source_files": [
+        "project.md"
+      ],
+      "source_section": "",
+      "key_elements": [
+        "项目磁贴",
+        "侧边栏项目名称",
+        "看板视图"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "project-return-dashboard",
+      "module": "Project",
+      "name": "返回仪表盘视图",
+      "description": "用户点击4ga Boards标志返回仪表盘视图",
+      "source_files": [
+        "project.md"
+      ],
+      "source_section": "",
+      "key_elements": [
+        "4ga Boards标志"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "sidebar-width",
+      "module": "Sidebar",
+      "name": "调整侧边栏宽度",
+      "description": "在个人设置中调整侧边栏的宽度",
+      "source_files": [
+        "sidebar.md"
+      ],
+      "source_section": "Some actions you can perform within sidebar: 1. You can change sidebar width inside [personal settings](./settings).",
+      "key_elements": [
+        "个人设置页面",
+        "侧边栏宽度滑块/输入框"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "sidebar-toggle",
+      "module": "Sidebar",
+      "name": "显示/隐藏侧边栏",
+      "description": "使用左上角的栏和箭头图标显示或隐藏侧边栏",
+      "source_files": [
+        "sidebar.md"
+      ],
+      "source_section": "You can show/hide the sidebar using the bar and arrow icon in the top-left corner, left of 4ga Boards logo.",
+      "key_elements": [
+        "左上角栏图标",
+        "箭头图标",
+        "侧边栏"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "sidebar-filter",
+      "module": "Sidebar",
+      "name": "过滤侧边栏内容",
+      "description": "使用顶部的过滤功能，切换过滤项目或板块，并清除过滤",
+      "source_files": [
+        "sidebar.md"
+      ],
+      "source_section": "You can filter your projects or boards using the filtering function at the top of the sidebar. The two arrows icon with a letter indicates which structure is being filtered: projects (P) or boards (B). To switch, click on the icon. As you can see in the example below, filtering works also if you write the middle part of the word. To clear filtering, click on the 'x' icon.",
+      "key_elements": [
+        "过滤输入框",
+        "过滤切换图标（P/B）",
+        "清除过滤按钮（x）"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "sidebar-expand-collapse-project",
+      "module": "Sidebar",
+      "name": "展开/折叠项目中的板块",
+      "description": "使用项目名称左侧的三角按钮显示或隐藏该项目下的所有板块",
+      "source_files": [
+        "sidebar.md"
+      ],
+      "source_section": "You can show/hide the boards in projects using triangle button on the left of the project name.",
+      "key_elements": [
+        "项目名称左侧三角按钮",
+        "板块列表"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "sidebar-navigate",
+      "module": "Sidebar",
+      "name": "导航到项目或板块",
+      "description": "通过点击侧边栏中的项目或板块名称进行快速导航，选中项高亮显示",
+      "source_files": [
+        "sidebar.md"
+      ],
+      "source_section": "You can quickly navigate between different projects/boards by clicking on their names. Selected project/board will be highlighted with blueish color.",
+      "key_elements": [
+        "项目名称",
+        "板块名称",
+        "高亮样式"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "sidebar-edit-menu",
+      "module": "Sidebar",
+      "name": "编辑项目/板块",
+      "description": "通过三点菜单编辑项目或板块（具体编辑操作在项目/板块文档中）",
+      "source_files": [
+        "sidebar.md"
+      ],
+      "source_section": "You can edit project/board within sidebar using a three-dot menu (see [project](./project) and [board](./board)).",
+      "key_elements": [
+        "三点菜单按钮",
+        "编辑选项"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "sidebar-add-project-board",
+      "module": "Sidebar",
+      "name": "添加项目或板块",
+      "description": "有权限时，侧边栏底部显示'+ Add project'和'+ Add board'按钮，可添加新项目或板块",
+      "source_files": [
+        "sidebar.md"
+      ],
+      "source_section": "If you have appropriate permissions, the buttons '+ Add project' and '+ Add board' will be visible at the bottom of the sidebar.",
+      "key_elements": [
+        "+ Add project 按钮",
+        "+ Add board 按钮",
+        "权限控制"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "card-create",
+      "module": "card",
+      "name": "创建卡片",
+      "description": "使用多种方式创建新卡片，包括输入标题后按回车/按钮，以及使用快捷键创建并打开或批量创建。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Creating, moving and deleting cards",
+      "key_elements": [
+        "+ Add Card 按钮",
+        "列表菜单 ellipsis -> Add Card",
+        "底部导航栏 + Add Card 按钮",
+        "标题输入框",
+        "Add Card 按钮",
+        "Ctrl+Enter",
+        "Shift+Enter"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "card-move",
+      "module": "card",
+      "name": "移动卡片",
+      "description": "通过拖放、卡片菜单、卡片视图列表选择或列表视图列表列，将卡片移动到当前看板的其他列表或其他看板/项目（仅菜单支持跨板移动）。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Creating, moving and deleting cards",
+      "key_elements": [
+        "拖放卡片",
+        "卡片菜单中的列表选择",
+        "卡片视图中的列表下拉",
+        "列表视图中的列表列"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "card-delete",
+      "module": "card",
+      "name": "删除卡片",
+      "description": "通过卡片菜单或卡片视图中的删除图标删除卡片，需确认。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Creating, moving and deleting cards / Card options",
+      "key_elements": [
+        "卡片 ellipsis 菜单中的 Delete Card",
+        "卡片视图右上角 bin 图标",
+        "弹出确认框"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "card-edit-title",
+      "module": "card",
+      "name": "编辑卡片标题",
+      "description": "点击卡片标题进入编辑状态，修改后按回车保存。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card menu / Card options",
+      "key_elements": [
+        "卡片标题",
+        "回车键"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "card-assign-members",
+      "module": "card",
+      "name": "分配/取消分配成员",
+      "description": "在卡片菜单或卡片视图中，通过点击加号选择或取消选择成员。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card menu / Card options",
+      "key_elements": [
+        "卡片菜单中的 Assign members",
+        "卡片视图成员区域的加号",
+        "成员复选框"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "card-manage-labels",
+      "module": "card",
+      "name": "管理标签",
+      "description": "添加、移除标签，创建新标签，编辑现有标签。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card menu / Card options",
+      "key_elements": [
+        "卡片菜单中的 Add/remove labels",
+        "卡片视图标签区域的加号",
+        "标签复选框",
+        "Create new label",
+        "标签编辑铅笔图标"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "card-set-due-date",
+      "module": "card",
+      "name": "设置/编辑截止日期",
+      "description": "通过卡片菜单或卡片视图添加或修改截止日期。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card menu / Card options",
+      "key_elements": [
+        "卡片菜单中的 Edit due date",
+        "卡片视图截止日期的加号/铅笔图标",
+        "日期选择器"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "card-use-timer",
+      "module": "card",
+      "name": "使用计时器",
+      "description": "开始/暂停计时，手动编辑计时，重置计时。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card menu / Card options",
+      "key_elements": [
+        "卡片菜单中的 Edit timer",
+        "卡片视图计时器的开始/暂停按钮",
+        "计时器编辑铅笔图标",
+        "重置"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "card-duplicate",
+      "module": "card",
+      "name": "复制卡片",
+      "description": "在卡片菜单中选择复制卡片，在原卡片下方创建完全相同副本。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card menu",
+      "key_elements": [
+        "卡片菜单中的 Duplicate card"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "card-copy-link",
+      "module": "card",
+      "name": "复制卡片链接",
+      "description": "在卡片菜单中复制卡片链接，可分享给团队。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card menu",
+      "key_elements": [
+        "卡片菜单中的 Copy a link to a card"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "card-view-activity",
+      "module": "card",
+      "name": "查看卡片活动",
+      "description": "通过卡片菜单、卡片视图活动日志或注释中的波形图标查看卡片的创建、编辑时间等操作记录。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card menu / Card options / Card view overview",
+      "key_elements": [
+        "卡片菜单中的 Check activity",
+        "卡片视图的活动日志",
+        "注释中的 waveform 图标"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "card-toggle-notifications",
+      "module": "card",
+      "name": "订阅/取消订阅通知",
+      "description": "在卡片视图中点击铃铛图标订阅或取消订阅该卡片的通知。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card options",
+      "key_elements": [
+        "卡片视图中的 Bell 图标"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "card-toggle-sections",
+      "module": "card",
+      "name": "隐藏/显示卡片视图元素",
+      "description": "在卡片视图中，通过点击 -/+ 图标隐藏或显示描述、任务、附件、评论等区域。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card options",
+      "key_elements": [
+        "区域标题旁的 - 和 + 图标"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "card-edit-description",
+      "module": "card",
+      "name": "编辑描述",
+      "description": "在卡片视图中编写描述，使用文本编辑器，点击 Save 或按 Ctrl+Enter 保存。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card options / Text editor",
+      "key_elements": [
+        "描述编辑框",
+        "Save 按钮",
+        "Ctrl+Enter"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "card-manage-tasks",
+      "module": "card",
+      "name": "管理任务",
+      "description": "添加、重命名、删除、标记完成/未完成、分配成员/截止日期、复制任务、查看活动日志、切换任务在列表视图的可见性。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card options",
+      "key_elements": [
+        "+ 或 Add Task 按钮",
+        "任务完成复选框",
+        "任务描述点击编辑",
+        "任务 ellipsis 菜单（delete, duplicate, edit due date, edit members, check activity）",
+        "列表视图中的三角形切换可见性"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "id": "card-manage-attachments",
+      "module": "card",
+      "name": "管理附件",
+      "description": "添加附件（粘贴、拖放、选择文件），设置或移除封面，删除附件。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card options",
+      "key_elements": [
+        "Add attachment 区域",
+        "Ctrl+V",
+        "拖放",
+        "Make cover 按钮",
+        "Remove cover 按钮",
+        "附件上的铅笔图标 -> Delete attachment"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "card-manage-comments",
+      "module": "card",
+      "name": "管理评论",
+      "description": "添加、编辑、删除评论，使用文本编辑器，查看活动（波形图标）。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Card options",
+      "key_elements": [
+        "评论输入框",
+        "Add comment 按钮",
+        "评论铅笔编辑图标",
+        "评论删除 bin 图标",
+        "波形活动图标"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "card-text-format",
+      "module": "card",
+      "name": "格式化文本",
+      "description": "在文本编辑器中对文本应用行内格式（加粗、斜体、删除线）和块级元素（标题、引用、代码/代码块、水平线、列表、表格）。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Text editor",
+      "key_elements": [
+        "加粗 (Ctrl+B)",
+        "斜体 (Ctrl+I)",
+        "删除线 (Ctrl+Shift+X)",
+        "标题 (Ctrl+1-6)",
+        "引用 (Ctrl+Q)",
+        "代码 (Ctrl+J)",
+        "代码块 (Ctrl+Shift+J)",
+        "水平线 (Ctrl+H)",
+        "无序列表 (Ctrl+Shift+U)",
+        "有序列表 (Ctrl+Shift+O)",
+        "勾选列表 (Ctrl+Shift+C)",
+        "表格按钮"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "card-text-insert",
+      "module": "card",
+      "name": "插入特殊元素",
+      "description": "在文本编辑器中插入链接、图片、提及、提交链接、issue链接、彩色文本、不可见注释。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Text editor",
+      "key_elements": [
+        "添加链接 (Ctrl+L)",
+        "添加图片 (Ctrl+K)",
+        "添加提及 (@用户名)",
+        "添加提交链接 (commit hash)",
+        "添加issue链接 (#数字或GH-数字)",
+        "添加彩色文本按钮",
+        "添加注释 (Ctrl+/)"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "card-text-view",
+      "module": "card",
+      "name": "编辑器视图与调整",
+      "description": "切换编辑器视图模式（编辑、实时、预览、全屏），调整编辑器大小，打开帮助。",
+      "source_files": [
+        "card.md"
+      ],
+      "source_section": "Text editor",
+      "key_elements": [
+        "编辑模式 (Ctrl+7)",
+        "实时模式 (Ctrl+8)",
+        "预览模式 (Ctrl+9)",
+        "全屏 (Ctrl+0)",
+        "拖动右下角调整大小",
+        "帮助按钮"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "settings-edit-profile",
+      "module": "settings",
+      "name": "编辑个人资料",
+      "description": "用户可以在个人资料设置中上传头像、更改显示名称、添加电话和组织信息并保存。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Profile",
+      "key_elements": [
+        "头像上传按钮",
+        "显示名称输入框",
+        "电话输入框",
+        "组织名称输入框",
+        "保存按钮"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "settings-language",
+      "module": "settings",
+      "name": "选择语言",
+      "description": "用户可以从下拉菜单中选择应用程序的语言。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Preferences > General",
+      "key_elements": [
+        "语言下拉选择器"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "settings-theme",
+      "module": "settings",
+      "name": "选择或自定义主题",
+      "description": "用户可以选择预设主题（默认、GitHub Dark）或创建自定义主题，包括编辑颜色。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Preferences > General",
+      "key_elements": [
+        "主题选择下拉菜单",
+        "自定义主题编辑器"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "settings-theme-shape",
+      "module": "settings",
+      "name": "选择主题形状",
+      "description": "用户可以选择元素的形状为方形或圆角。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Preferences > General",
+      "key_elements": [
+        "主题形状选择器（方形/圆角）"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "settings-preferred-details-font",
+      "module": "settings",
+      "name": "选择首选详情字体",
+      "description": "用户可以选择卡片描述和评论中使用的字体（默认或等宽）。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Preferences > General",
+      "key_elements": [
+        "字体选择下拉菜单（默认/等宽）"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "settings-default-view",
+      "module": "settings",
+      "name": "设置默认视图",
+      "description": "用户设置看板默认以看板视图还是列表视图打开。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Preferences > General",
+      "key_elements": [
+        "默认视图选择按钮（看板视图/列表视图）"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "settings-compact-sidebar",
+      "module": "settings",
+      "name": "切换紧凑侧边栏",
+      "description": "用户启用或禁用紧凑侧边栏模式，改变侧边栏宽度。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Preferences > General",
+      "key_elements": [
+        "紧凑侧边栏开关"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "settings-list-view-style",
+      "module": "settings",
+      "name": "设置列表视图样式",
+      "description": "用户选择列表视图为紧凑或默认（较大）样式。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Preferences > General",
+      "key_elements": [
+        "列表视图样式选择按钮（紧凑/默认）"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "settings-users-settings-style",
+      "module": "settings",
+      "name": "设置用户设置样式",
+      "description": "用户选择用户设置页面的显示样式为紧凑或默认。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Preferences > General",
+      "key_elements": [
+        "用户设置样式选择按钮（紧凑/默认）"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "settings-hide-card-modal-activity",
+      "module": "settings",
+      "name": "配置卡片显示选项",
+      "description": "用户可启用/禁用隐藏卡片模态中的活动日志和最近截止日期。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Preferences > General",
+      "key_elements": [
+        "隐藏卡片模态活动日志开关",
+        "隐藏最近截止日期开关"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "settings-notification-subscriptions",
+      "module": "settings",
+      "name": "配置通知订阅",
+      "description": "用户设置是否自动订阅自己创建的卡片、加入的看板、项目，以及（管理员）订阅用户通知和实例通知。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Preferences > Notifications",
+      "key_elements": [
+        "订阅自己的卡片开关",
+        "订阅新看板开关",
+        "订阅新项目开关",
+        "订阅用户通知开关",
+        "订阅实例通知开关"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "settings-account-info",
+      "module": "settings",
+      "name": "更改账户信息",
+      "description": "用户可以在账户设置中更改用户名和/或电子邮件地址，需提供当前密码。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Account",
+      "key_elements": [
+        "用户名输入框",
+        "电子邮件输入框",
+        "当前密码输入框",
+        "保存按钮"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "settings-change-password",
+      "module": "settings",
+      "name": "更改密码",
+      "description": "用户可以在认证设置中更改当前密码。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "Authentication",
+      "key_elements": [
+        "当前密码输入框",
+        "新密码输入框",
+        "确认新密码输入框",
+        "保存按钮"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "settings-import-getting-started",
+      "module": "settings",
+      "name": "导入入门项目",
+      "description": "用户可以在关于页面中导入“Getting Started”项目，获取交互式介绍。",
+      "source_files": [
+        "settings.md"
+      ],
+      "source_section": "About",
+      "key_elements": [
+        "导入入门项目按钮"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "id": "view-dashboard",
+      "module": "Views Description",
+      "name": "查看 Dashboard 视图",
+      "description": "用户能够查看仪表盘视图，显示项目概览。",
+      "source_files": [
+        "view.md"
+      ],
+      "source_section": "1. Dashboard view",
+      "key_elements": [
+        "Dashboard view",
+        "项目概览"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "view-project",
+      "module": "Views Description",
+      "name": "查看 Project 视图",
+      "description": "用户能够查看项目视图，显示项目详情。",
+      "source_files": [
+        "view.md"
+      ],
+      "source_section": "2. Project view",
+      "key_elements": [
+        "Project view",
+        "项目详情"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "view-board",
+      "module": "Views Description",
+      "name": "查看 Board 视图",
+      "description": "用户能够查看看板视图，显示列表和卡片。",
+      "source_files": [
+        "view.md"
+      ],
+      "source_section": "2. Board view",
+      "key_elements": [
+        "Board view",
+        "看板",
+        "列表",
+        "卡片"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "id": "view-board-with-opened-card",
+      "module": "Views Description",
+      "name": "查看带有打开卡片的 Board 视图",
+      "description": "用户能够在Board视图中查看已打开卡片的详情视图。",
+      "source_files": [
+        "view.md"
+      ],
+      "source_section": "3. Board with opened card view",
+      "key_elements": [
+        "Board view",
+        "打开卡片视图",
+        "卡片详情"
+      ],
+      "difficulty": "easy"
+    }
+  ]
+}

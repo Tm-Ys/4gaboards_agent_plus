@@ -25,6 +25,9 @@ build/
 # ===== 生成产物（可由代码重新生成）=====
 **/outputs/*
 !**/outputs/.gitkeep
+# basic 场景集是固化的默认数据集，需要入库（任务二默认路由）
+!**/outputs/basic/
+!**/outputs/basic/**
 
 # ===== 系统 / 编辑器 =====
 .DS_Store
