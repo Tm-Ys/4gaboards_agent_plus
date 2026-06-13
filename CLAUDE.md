@@ -25,7 +25,9 @@
 - **它们各自是独立的 git 仓库**，指向上游，**不是本项目的子模块**。
 - **只能参考**：可读其文档内容作为任务一的知识输入；可参考其前后端代码风格来写我们自己的代码。
 - **不得直接复用其代码**，**不要修改这两个目录里的任何文件**。
-- **本项目的交付代码全部自研**，放在仓库根目录下（建议建 `scenario_generator/`、`agent/`、`web/` 等自有目录，具体结构待定）。
+- **本项目的交付代码全部自研**，放在仓库根目录下，目前两个自有目录：
+  - `scenario_generator/` — 任务一的 **Python 原型**（已验证，prompt/schema 与 TS 版互通）。
+  - `app/` — **TypeScript 主交付程序**（任务一生成逻辑已移植；任务二 Agent + 前端也在此实现）。
 - 被测对象是**线上 Demo**（`demo.4gaboards.com`），**不需要**在本仓库运行 4gaBoards。
 
 > 简记：根目录之外的两份是“字典和范文”，只许看、不许抄、不许改；我们自己写的字，写在根目录。
@@ -51,10 +53,11 @@
 1. **交付自研**，不抄上游。
 2. **检索策略 = 长上下文直填**：生成测试场景时把整段文档直接喂给 LLM，**不要默认走 RAG**。`.env` 里 `RETRIEVER_MODE` 仅用于对比实验。
 3. **智能体 = ReAct**（Reason + Act）。
-4. **大模型用国产**：GLM-4.6V / 4.7、Qwen3-VL-Plus、DeepSeek V3，走 OpenAI 兼容接口。
-5. **语言分工**：
-   - Python（`uv` 管理虚拟环境与依赖）：LLM 编排、测试场景生成、Web 测试智能体 / 浏览器自动化。
-   - TypeScript + Node.js：功能点 / 测试场景的**可视化展示**前端（可参考 4gaBoards 前后端风格，但自研），按需配数据库。
+4. **大模型用国产**：首选 **DeepSeek V4 Flash**（`.env` `DEEPSEEK_MODEL=deepseek-v4-flash`，OpenAI 兼容接口）；备选 GLM-4.6V / 4.7、Qwen3-VL-Plus、DeepSeek V3。
+5. **语言分工（已更新）**：
+   - **TypeScript（`app/`）= 主交付程序**：任务一生成逻辑已从 Python 移植至此；**任务二 Agent（ReAct + 浏览器自动化）与前端可视化也在此实现**。`app/src/schemas.ts`（zod）是前端 / 生成 / Agent 三方共享的类型契约。
+   - **Python（`scenario_generator/`）= 已验证原型**：prompt 与 JSON schema 与 `app/` 完全一致、产物互通，保留作参考与快速实验。
+   - 本机联网需走本地代理：Python 加 `httpx[socks]`；Node 用 `undici` `ProxyAgent` 包自定义 fetch 注入 openai SDK（见 `app/src/http.ts`），**注意 undici 不支持 socks，取 `HTTPS_PROXY` 而非 `all_proxy`**。
 
 ---
 
@@ -85,10 +88,27 @@
 
 ---
 
+## 任务二入口：场景集（scenario set）
+
+任务二 Agent 不必每次重新生成场景，直接加载已固化的命名场景集：
+
+- 约定：`app/outputs/<setName>/{features.json, scenarios.json}`。
+- **默认集 `basic`**：已入库（118 功能点 / 179 场景 / 100% 覆盖），是任务二默认数据源。
+- 入口（`app/src/scenarioStore.ts`）：
+  ```ts
+  import { loadScenarioSet } from "./scenarioStore";
+  const { features, scenarios } = loadScenarioSet();   // 默认 basic
+  ```
+- 想跑实验版场景：`npm run scenarios` 生成后放进 `app/outputs/<实验名>/`，再 `loadScenarioSet("<实验名>")`。
+- 仅 `outputs/basic/` 入库，其余 `outputs/*` 仍 gitignore。
+
+---
+
 ## 当前状态（2026-06）
 
 - ✅ 收集参考源码与文档；核心方向已定。
 - ✅ 任务一完成：`scenario_generator/`（Python 原型）+ `app/`（TS 移植，schema 互通）。功能点提取 + 测试场景生成均已跑通（长上下文直填）。
+- ✅ 固化默认场景集 `basic`（`app/outputs/basic/`，179 场景）+ `scenarioStore.ts` 默认路由，任务二无需每次重新生成。
 - ✅ 仓库已 `git init`、推送至 `origin/main`；`.env`/参考仓库/产物均已 gitignore。
 - ⬜ 任务二 Agent（ReAct + Playwright，对 demo.4gaboards.com）尚未开始；将复用 `app/src/schemas.ts` 的 `TestScenario` 类型作为输入契约。
 - ⬜ 可视化前端（TS）暂缓。

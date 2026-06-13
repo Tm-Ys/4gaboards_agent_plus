@@ -85,14 +85,19 @@
 4gaboard_agent_plus/
 ├── README.md              # 本文件
 ├── CLAUDE.md              # 给 Claude Code 的项目工作指南
-├── .env                   # 所有 API Key 与账号密码（不入库）
+├── .env.example           # 环境变量模板（真实 .env 不入库）
 ├── 4gaBoards/             # 【只读参考】目标应用源码，上游 RARgames/4gaBoards
-│   ├── client/            #   React + TypeScript 前端（参考其前后端风格）
-│   ├── server/            #   Sails.js (Node.js) 后端，REST API
-│   └── packages/          #   共享包 (pnpm workspace)
 ├── 4gaBoardsDocs/         # 【只读参考 + 知识源】目标应用用户手册，上游 RARgames/4gaBoardsDocs
-│   └── docs/              #   Docusaurus 文档源（约 52 个 md/mdx）
-└── <本项目自研代码>        # 测试场景生成器 / ReAct 智能体 / 可视化前端（待建）
+├── scenario_generator/    # 【任务一·Python 原型】功能点提取 + 场景生成（已验证）
+│   ├── src/scenario_generator/
+│   └── outputs/           #   生成产物（不入库）
+└── app/                   # 【主交付·TypeScript】生成逻辑移植 + 任务二 Agent + 前端
+    ├── src/
+    │   ├── schemas.ts         # zod schema + TS 类型（前端/生成/Agent 共享契约）
+    │   ├── extractFeatures.ts # 任务一·步骤1
+    │   ├── generateScenarios.ts # 任务一·步骤2
+    │   └── scenarioStore.ts   # 场景集加载，默认路由 basic
+    └── outputs/basic/         # 固化默认场景集（118 功能点 / 179 场景，入库）
 ```
 
 > ⚠️ **重要约束**：`4gaBoards/` 与 `4gaBoardsDocs/` 各自是**独立的 git 仓库**（指向上游 `RARgames/...`），是**只读参考资料**：可作为任务一的知识输入、可在自研时参考其代码风格，但**不得直接复用其代码**，也不要修改这两个子目录的内容。本项目交付代码放在仓库根目录下、由我们自行编写。
@@ -139,8 +144,8 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 
 ### 5.2 运行时
 
-- **Node.js / TypeScript**：用于可视化前端（功能点 / 测试场景展示），可参考 4gaBoards 前后端风格自研实现，配合数据库。
-- **Python（uv）**：用于 LLM 编排、测试场景生成与 Web 测试智能体（浏览器自动化）。本地用 `uv` 创建虚拟环境管理依赖。
+- **TypeScript / Node.js（`app/`，主交付）**：任务一生成逻辑（已从 Python 移植）、任务二 ReAct Agent（浏览器自动化）、可视化前端都在此实现。`app/src/schemas.ts` 是三方共享类型契约。
+- **Python（`scenario_generator/`，原型）**：已验证的任务一原型，prompt / schema 与 `app/` 一致、产物互通；用 `uv` 管理依赖，保留作快速实验。
 
 ### 5.3 目标应用
 

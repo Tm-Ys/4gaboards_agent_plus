@@ -19,8 +19,10 @@ app/
 │   ├── llm.ts               # DeepSeek（OpenAI 兼容）封装，JSON 模式
 │   ├── concurrency.ts       # 并发池工具
 │   ├── extractFeatures.ts   # 任务一·步骤1：功能点提取
-│   └── generateScenarios.ts # 任务一·步骤2：测试场景生成
-└── outputs/                 # 生成的 JSON 产物
+│   ├── generateScenarios.ts # 任务一·步骤2：测试场景生成
+│   └── scenarioStore.ts     # 场景集加载，默认路由 basic（任务二入口）
+└── outputs/                 # 生成的 JSON 产物（仅 basic/ 入库）
+    └── basic/               # 固化默认场景集：features.json + scenarios.json
 ```
 
 ## 环境依赖
@@ -51,6 +53,18 @@ npm run scenarios -- --limit 5
 ```
 
 类型检查：`npm run typecheck`。
+
+## 场景集与任务二入口
+
+为避免任务二 Agent 每次重新生成场景，产物组织成**命名场景集** `outputs/<setName>/`，默认集为 **`basic`**（已入库，118 功能点 / 179 场景 / 100% 覆盖）。任务二直接加载：
+
+```ts
+import { loadScenarioSet } from "./scenarioStore";
+const { features, scenarios } = loadScenarioSet();   // 默认 basic
+// loadScenarioSet("my-exp")                          // 加载其它命名集
+```
+
+跑实验版场景：`npm run scenarios` 生成后放入 `outputs/<实验名>/`，再 `loadScenarioSet("<实验名>")`。
 
 ## 与 Python 版的关系
 
