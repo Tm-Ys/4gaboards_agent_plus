@@ -179,9 +179,9 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 
 - [x] 收集目标应用源码（`4gaBoards/`）与官方文档（`4gaBoardsDocs/`）作为参考与知识来源。
 - [x] 确定核心方向：自研交付、长上下文直填 > RAG、源码 + 手册双通道、ReAct 架构、对线上 Demo 测试。
-- [ ] 初始化本项目 git 仓库并关联远程：<https://github.com/Tm-Ys/4gaboards_agent_plus.git>
-- [ ] 任务一：实现功能点提取 + 结构化测试场景生成（长上下文直填）。
-- [ ] 任务一：实现功能点 / 测试场景的可视化展示（TS + Node）。
+- [x] 初始化本项目 git 仓库并关联远程：<https://github.com/Tm-Ys/4gaboards_agent_plus.git>
+- [x] 任务一：功能点提取 + 结构化测试场景生成（长上下文直填；Python 原型 `scenario_generator/` + TS 移植 `app/`）。
+- [ ] 任务一：功能点 / 测试场景的可视化展示（TS + Node）—— 暂缓。
 - [ ] 任务二：实现 ReAct 智能体（规划 / 记忆 / 执行 / 验证），对 `demo.4gaboards.com` 执行测试。
 - [ ] 任务二（提升档）：场景变异与典型应用错误识别。
 

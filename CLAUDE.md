@@ -32,14 +32,17 @@
 
 ---
 
-## 根目录还不是 git 仓库
+## 版本库（已初始化并推送）
 
-`4gaBoards/` 和 `4gaBoardsDocs/` 自带 `.git`，但**项目根目录尚未 `git init`**。后续需要：
-- 在根目录 `git init`；
-- 关联远程 `https://github.com/Tm-Ys/4gaboards_agent_plus.git`；
-- 确保两个子目录不被重复纳入版本控制（它们是独立仓库 / 参考用，建议加入根 `.gitignore` 或用 submodule 管理）。
+项目根目录已是 git 仓库（分支 `main`），远程 `origin = https://github.com/Tm-Ys/4gaboards_agent_plus.git`。
 
-在用户明确要求初始化仓库之前，不要擅自执行 git 操作。
+`.gitignore` 已排除（**都不会入库**）：
+- `.env`（密钥，绝不提交）、`.claude/`
+- `/4gaBoards/`、`/4gaBoardsDocs/`（只读参考，各自有上游，需单独 clone）
+- `node_modules/`、`.venv/`、`__pycache__/`、`outputs/*`（生成产物）
+
+提交前若新增密钥，确认它没被 `git add`；可用 `git grep --cached <片段>` 扫描暂存内容。
+提交身份为仓库级：`Tm-Ys <Tm-Ys@users.noreply.github.com>`，可改。
 
 ---
 
@@ -85,6 +88,7 @@
 ## 当前状态（2026-06）
 
 - ✅ 收集参考源码与文档；核心方向已定。
-- ⬜ 根目录尚未 `git init` / 关联远程。
-- ⬜ 任务一、任务二的代码尚未开始编写。
-- 进入实现阶段时，先与用户确认目录结构与第一个落地模块。
+- ✅ 任务一完成：`scenario_generator/`（Python 原型）+ `app/`（TS 移植，schema 互通）。功能点提取 + 测试场景生成均已跑通（长上下文直填）。
+- ✅ 仓库已 `git init`、推送至 `origin/main`；`.env`/参考仓库/产物均已 gitignore。
+- ⬜ 任务二 Agent（ReAct + Playwright，对 demo.4gaboards.com）尚未开始；将复用 `app/src/schemas.ts` 的 `TestScenario` 类型作为输入契约。
+- ⬜ 可视化前端（TS）暂缓。
