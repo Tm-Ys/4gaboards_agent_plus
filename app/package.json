@@ -1,0 +1,26 @@
+{
+  "name": "4gaboard-agent-plus",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "4gaBoards 测试场景生成器 + 智能测试 Agent（TypeScript 版）",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "extract": "tsx src/extractFeatures.ts",
+    "scenarios": "tsx src/generateScenarios.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "openai": "^6.42.0",
+    "undici": "^8.4.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}

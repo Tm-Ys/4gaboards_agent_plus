@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+
+# 生成的产物（保留目录，具体输出不入库）
+outputs/*
+!outputs/.gitkeep
+
+# 系统 / 编辑器
+.DS_Store
+.idea/
+.vscode/
+*.log

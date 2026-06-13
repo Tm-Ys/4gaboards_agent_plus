@@ -1,0 +1,19 @@
+[project]
+name = "scenario-generator"
+version = "0.1.0"
+description = "4gaBoards 测试场景生成器：基于长上下文的功能点提取与测试场景生成"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "openai>=1.40",
+    "python-dotenv>=1.0",
+    "pydantic>=2.6",
+    "httpx[socks]>=0.28.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scenario_generator"]

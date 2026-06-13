@@ -1,0 +1,33 @@
+# ===== 密钥与本地配置（绝不提交）=====
+.env
+.env.local
+.env.*.local
+
+# ===== Claude Code 本地配置 =====
+.claude
+.claude/
+
+# ===== 只读参考仓库（各自有上游，非本项目交付物）=====
+/4gaBoards/
+/4gaBoardsDocs/
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+.venv/
+.python-version-local
+
+# ===== Node =====
+node_modules/
+dist/
+build/
+
+# ===== 生成产物（可由代码重新生成）=====
+**/outputs/*
+!**/outputs/.gitkeep
+
+# ===== 系统 / 编辑器 =====
+.DS_Store
+.idea/
+.vscode/
+*.log
