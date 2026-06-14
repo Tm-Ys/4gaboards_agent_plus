@@ -187,12 +187,17 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 - [x] 初始化本项目 git 仓库并关联远程：<https://github.com/Tm-Ys/4gaboards_agent_plus.git>
 - [x] 任务一：功能点提取 + 结构化测试场景生成（长上下文直填；Python 原型 `scenario_generator/` + TS 移植 `app/`）。
 - [ ] 任务一：功能点 / 测试场景的可视化展示（TS + Node）—— 暂缓。
-- [ ] 任务二：实现 ReAct 智能体（规划 / 记忆 / 执行 / 验证），对 `demo.4gaboards.com` 执行测试。**方案已定（见第八节）**，P0 待开始。
+- [~] 任务二：ReAct 智能体（规划/记忆/执行/验证）对 `demo.4gaboards.com` 执行测试。**P0–P3 已完成**（Agent + 独立判官 + 批量 harness），**基线通过率 43%**（见第八节）；下一步 P1.5 补工具库。
 - [ ] 任务二（提升档）：场景变异与典型应用错误识别。
 
 ---
 
 ## 八、任务二实现方案
+
+> **实现状态（2026-06）**：P0–P3 已完成并跑通。Agent（Playwright + 两层工具 + function-calling）、
+> 独立 LLM 判官、批量 harness 全部就绪。**基线通过率 43%**（30 个 easy+happy_path）：
+> board/admin/account 类全过；**instance 设置开关类 0/13 待补工具**（下一步 P1.5）。
+> 运行：`cd app && npm run run-scenario -- --id <id>` / `npm run run-batch -- --difficulty easy --tag happy_path --limit 30`。
 
 任务二 = **ReAct 智能体**消费任务一的 `TestScenario`，在 `demo.4gaboards.com` 端到端执行，
 用 **LLM-as-judge** 判定通过/失败。核心 headless，产出结构化轨迹与结果，供前端渲染。

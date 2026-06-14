@@ -54,6 +54,18 @@ npm run scenarios -- --limit 5
 
 类型检查：`npm run typecheck`。
 
+## 任务二 Agent（ReAct，已实现 P0–P3）
+
+`src/agent/` 下：Playwright 会话 + AX 文本观察 + 两层工具（A 领域 / B 通用）+ ReAct 循环（function-calling）+ 独立 LLM 判官 + 批量 harness。
+
+```bash
+npm run run-scenario -- --id board-create-happy-path   # 单场景（含判官 PASS/FAIL）
+npm run run-scenario -- --list                         # 列出场景 id
+npm run run-batch -- --difficulty easy --tag happy_path --limit 30   # 批量 + 通过率报告
+```
+
+轨迹/报告落 `outputs/runs/`（gitignored）。**当前基线通过率 43%**（board/admin/account 全过；instance 设置开关类 0/13，待 P1.5 补工具）。详见仓库根 [CLAUDE.md](../CLAUDE.md)「任务二实现方案」与「下次接着做」。
+
 ## 场景集与任务二入口
 
 为避免任务二 Agent 每次重新生成场景，产物组织成**命名场景集** `outputs/<setName>/`，默认集为 **`basic`**（已入库，118 功能点 / 179 场景 / 100% 覆盖）。任务二直接加载：

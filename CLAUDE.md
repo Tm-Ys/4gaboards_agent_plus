@@ -142,29 +142,56 @@
 - **成本/稳定性**：179 场景 × 十几步 × 每步一调用，需步数预算、重试、并发控制、开发期先跑 `easy`+`happy_path` 子集。
 - **judge 误判**：后期用「规则启发式 + judge」双通道交叉验证。
 
-### 分阶段路线
-- **P0**：Playwright + 观察构建器（AX→ref 文本）+ 工具注册框架 + B 层通用工具 + 5 个种子 A 层工具（`login` / `create_board` / `add_card` / `open_card` / `observe`）。
-- **P1**：用 function calling 跑通**一个** happy_path 场景（`card-create`），验证"选工具→执行→观察→judge"闭环。
-- **P1.5**：按模块扩 A 层工具库（card → list → board → view → settings …）。
-- **P2**：judge（步骤检查点 + 场景终判）。
-- **P3**：批量 harness + 通过率报告（按 difficulty/tag）。
-- **P4**：健壮性（轨迹摘要压缩、重试、拖拽、截图可选）。
-- **P5**：提升档（场景变异 + oracle 比对）。
-- **前端**：P1/P2 出结构化事件后并行做，渲染轨迹与结果；任务一面板接 `loadScenarioSet`。
+### 分阶段路线（✅=已完成）
+- ✅ **P0**：Playwright + 观察构建器（AX→ref 文本）+ 工具注册框架 + B 层通用工具 + A 层种子（auth_login / board_create / board_open / card_create）。
+- ✅ **P1**：ReAct 循环（function-calling ↔ registry）跑通 board-create happy_path；agent 能自适应真实 UI、失败自恢复。
+- ✅ **P2**：独立 LLM 判官（场景级终判 PASS/FAIL + 失败定位 + 原因）；trace 机制让多步封装工具对判官可见；判官抓实质（核心达成即 PASS，描述性/语言不匹配项记 missed 不翻盘）。
+- ✅ **P3**：批量 harness（`run-batch`）+ 通过率报告。**基线 43%**（30 个 easy+happy_path：board 5/5、admin 3/3、account 1/1 全过；**instance 设置开关类 0/13 全挂**）。
+- ⬜ **P1.5（下一步）**：按模块扩 A 层工具库。**优先 instance/settings 开关类**（救回 0/13 的 instance 簇），再 card/list/view/notifications。
+- ⬜ **P4**：健壮性（轨迹摘要压缩、并发、拖拽、清理 demo 数据、截图可选）。
+- ⬜ **P5**：提升档（场景变异 + oracle 比对）。
+- ⬜ **前端**：渲染轨迹与结果；任务一面板接 `loadScenarioSet`。
 
-### 目录设想
+### 实际目录（已实现）
 ```
 app/src/agent/
-├── browser/   # Playwright 会话、observation、B 层 actions 执行器
-├── tools/     # 工具注册框架 registry + A 层（按模块分子目录）+ B 层
-├── react/     # prompt、动作/工具类型、ReAct 循环
-├── planning/  # 场景 → 执行计划
-├── memory/    # 轨迹、scratchpad
-├── verify/    # LLM judge（检查点 + 终判）
-└── runner/    # 单场景 harness、前置 setup、批量报告
+├── browser/   # context.ts(会话/登录/waitForReady) · observation.ts(AX→ref，含 heading)
+├── tools/     # registry.ts(注册+toOpenAITools+trace) · browser.ts(B层) · domain.ts(A层)
+├── react/     # prompt.ts · types.ts · loop.ts(ReAct 循环)
+├── verify/    # transcript.ts(证据文本，不截断) · judge.ts(独立判官)
+├── runner/    # runScenario.ts(单场景) · runBatch.ts(批量+报告聚合)
+├── cli/       # run.ts(--id/--feature) · run-batch.ts(--difficulty/--tag/--limit)
+├── recon.ts   # 选择器侦察脚本（开发期）
+└── smoke.ts   # 工具直接调用冒烟（开发期）
 ```
+> `planning/`、`memory/` 暂未独立成目录（规划靠场景 phases 作骨架、记忆用 ReAct 轨迹，已够用）。
+
+**任务二运行**：
+```bash
+cd app
+npm run run-scenario -- --id board-create-happy-path          # 单场景（含判官）
+npm run run-scenario -- --list                                # 列场景
+npm run run-batch -- --difficulty easy --tag happy_path --limit 30   # 批量+通过率
+```
+轨迹/报告落 `app/outputs/runs/`（gitignored）。
 
 参考（只读）：`4gaBoards/tests/` 是 Playwright e2e，可借鉴该应用的 DOM 结构与登录鉴权写法，但代码自研。
+
+---
+
+## 🔜 下次接着做（handoff）
+
+**当前位置**：任务二 P0–P3 完成，**基线通过率 43%**（30 个 easy+happy_path）。
+完整报告：`app/outputs/runs/batch-2026-06-14T16-21-49-547Z.json`（gitignored；可重跑复现）。
+
+**最高杠杆的下一步 = P1.5：补 `instance/settings` 开关类领域工具**（基线里 instance 0/13 是最大失分簇）：
+1. **侦察**：改 `app/src/agent/recon.ts` 打开 instance 设置页，dump toggle/checkbox 的 DOM——开关多为自定义组件，`browser_click` 点不动（不可见/disabled），要找可点的真实元素或用 `check()`/`click({force})`。
+2. **建工具**：在 `app/src/agent/tools/domain.ts` 加 `settings_open`（进设置页）、`settings_toggle`（按标签名切开关、返回新状态），照 board_create 模式（幂等、键入搜索、trace 回报中间观察）。
+3. **回归**：`npm run run-batch -- --difficulty easy --tag happy_path --limit 30`，看 instance 簇与整体通过率提升。
+
+**之后**：扩 notifications/list/card/view 工具 → 跑 medium/hard 子集 → P4（并发、demo 数据清理、拖拽、变异）→ 前端。
+
+**别忘的关键约束**：① 工具驱动真实 UI、不走后端 API；② 工具名只能 `[a-zA-Z0-9_-]`（用下划线）；③ 判官证据不要截断（DeepSeek 上下文充裕）；④ 多步工具用 trace 回报中间观察，否则判官看不到中间态。
 
 ---
 
@@ -174,5 +201,6 @@ app/src/agent/
 - ✅ 任务一完成：`scenario_generator/`（Python 原型）+ `app/`（TS 移植，schema 互通）。功能点提取 + 测试场景生成均已跑通（长上下文直填）。
 - ✅ 固化默认场景集 `basic`（`app/outputs/basic/`，179 场景）+ `scenarioStore.ts` 默认路由，任务二无需每次重新生成。
 - ✅ 仓库已 `git init`、推送至 `origin/main`；`.env`/参考仓库/产物均已 gitignore。
-- ⬜ 任务二 Agent 方案已定（ReAct + 领域工具 + LLM judge，详见上方「任务二实现方案」），**P0 待开始**；输入契约复用 `app/src/schemas.ts` 的 `TestScenario`（经 `loadScenarioSet("basic")` 加载）。
+- ✅ 任务二 P0–P3 完成：ReAct Agent（浏览器+观察+两层工具+function-calling）+ 独立 LLM 判官 + 批量 harness。**基线通过率 43%**（board/admin/account 全过，instance 设置开关类 0/13 待补工具）。
+- ⬜ **下一步 P1.5**：补 instance/settings 开关类领域工具（见上方「🔜 下次接着做」）。
 - ⬜ 可视化前端（TS）暂缓。
