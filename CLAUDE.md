@@ -104,11 +104,75 @@
 
 ---
 
+## 任务二实现方案（ReAct + 领域工具）
+
+目标：ReAct 智能体消费任务一的 `TestScenario`，在 `demo.4gaboards.com` 上端到端执行，
+用 LLM-as-judge 判定通过/失败。核心 headless，产出结构化轨迹与结果，供前端渲染。
+输入契约：`app/src/schemas.ts` 的 `TestScenario`，经 `loadScenarioSet("basic")` 加载。
+
+### 架构总览
+- ReAct 循环：观察 → 思考（选工具） → 执行（tool call） → 观察 …… 直至 `done` 或步数上限（≤20/场景）。
+- 动作层 = **两层工具 + 原生 function calling**（DeepSeek 支持）：
+  - **A 层 领域工具**：照 4gaBoardsDocs 写，按任务一模块组织（auth / board / list / card / view / settings …），
+    每个对应一项文档能力；**驱动真实 UI**（点真按钮、填真表单），返回结构化领域状态。
+  - **B 层 通用浏览器工具**：`browser.click(ref) / fill / press / scroll / goto / observe() / done` —— 兜底 A 层未覆盖的步骤；`observe()` 即观察本身。
+- 观察空间 = **文本可访问性树（AX tree）+ 元素 ref**，模型无关（适配 DeepSeek 文本模型）；截图作为可选 VLM 增强。
+- 工具注册：`app/src/agent/tools/`，每个工具声明 `{ name, description, params(zod), handler(page, args) }`，
+  从 zod 自动生成 OpenAI function schema。**加工具 = 加文件**。
+
+### ⚠️ 两条底线（端到端测试有效性，写代码时必须守）
+1. **被测动作必须走真实 UI**，不得用后端 API 走捷径（否则变成测 API 而非 Web 应用）。
+   **后端 API 仅用于「前置数据准备」**（登录态、播种 project/board），绝不用于被测动作本身。
+2. **验证看真实渲染页**：judge 核对 expectation 的 `key_features` 时取真实页面观察（AX/截图），
+   不能只信工具返回的"成功"——这样才能抓布局/语义错误（提升档要求）。
+
+### 四要素落地
+- **规划**：场景 `phases[]` 是高层计划骨架；Agent 维护"当前 step 指针"，把抽象步骤操作化为工具调用。
+- **记忆**：短期轨迹（thought/action/observation，超长则摘要压缩）+ scratchpad（记本场景创建的资源名，便于验证/清理）。长期（后期）：跨场景常见模式复用。
+- **执行**：Playwright 工具执行器；元素找不到/超时作为 observation 反馈回去。
+- **验证**：两层 **LLM judge（独立角色，避免执行者自评偏差）**：① 步骤检查点（每个 expectation 到达时核对 key_features）；② 场景终判（review 全轨迹 → PASS/FAIL + 失败步骤 + 原因）。
+
+### docs → 工具桥（任务一衔接）
+任务一的 118 个 feature point 基本就是工具清单。可从 feature catalog 自动脚手架工具 stub
+（name 取 feature id、params 从 key_elements 推），Playwright handler 人工补。这是 Task1→Task2 的干净闭环。
+
+### 已知难点
+- **拖拽**（看板核心）：AX-tree Agent 对"拖到哪"判断弱 → Agent 指定目标列表 ref + Playwright `dragTo`。
+- **登录/数据隔离**：demo 共享站点，用 `4GABOARD_*` 登录，带时间戳的 project/board 名，跑完清理。
+- **成本/稳定性**：179 场景 × 十几步 × 每步一调用，需步数预算、重试、并发控制、开发期先跑 `easy`+`happy_path` 子集。
+- **judge 误判**：后期用「规则启发式 + judge」双通道交叉验证。
+
+### 分阶段路线
+- **P0**：Playwright + 观察构建器（AX→ref 文本）+ 工具注册框架 + B 层通用工具 + 5 个种子 A 层工具（`login` / `create_board` / `add_card` / `open_card` / `observe`）。
+- **P1**：用 function calling 跑通**一个** happy_path 场景（`card-create`），验证"选工具→执行→观察→judge"闭环。
+- **P1.5**：按模块扩 A 层工具库（card → list → board → view → settings …）。
+- **P2**：judge（步骤检查点 + 场景终判）。
+- **P3**：批量 harness + 通过率报告（按 difficulty/tag）。
+- **P4**：健壮性（轨迹摘要压缩、重试、拖拽、截图可选）。
+- **P5**：提升档（场景变异 + oracle 比对）。
+- **前端**：P1/P2 出结构化事件后并行做，渲染轨迹与结果；任务一面板接 `loadScenarioSet`。
+
+### 目录设想
+```
+app/src/agent/
+├── browser/   # Playwright 会话、observation、B 层 actions 执行器
+├── tools/     # 工具注册框架 registry + A 层（按模块分子目录）+ B 层
+├── react/     # prompt、动作/工具类型、ReAct 循环
+├── planning/  # 场景 → 执行计划
+├── memory/    # 轨迹、scratchpad
+├── verify/    # LLM judge（检查点 + 终判）
+└── runner/    # 单场景 harness、前置 setup、批量报告
+```
+
+参考（只读）：`4gaBoards/tests/` 是 Playwright e2e，可借鉴该应用的 DOM 结构与登录鉴权写法，但代码自研。
+
+---
+
 ## 当前状态（2026-06）
 
 - ✅ 收集参考源码与文档；核心方向已定。
 - ✅ 任务一完成：`scenario_generator/`（Python 原型）+ `app/`（TS 移植，schema 互通）。功能点提取 + 测试场景生成均已跑通（长上下文直填）。
 - ✅ 固化默认场景集 `basic`（`app/outputs/basic/`，179 场景）+ `scenarioStore.ts` 默认路由，任务二无需每次重新生成。
 - ✅ 仓库已 `git init`、推送至 `origin/main`；`.env`/参考仓库/产物均已 gitignore。
-- ⬜ 任务二 Agent（ReAct + Playwright，对 demo.4gaboards.com）尚未开始；将复用 `app/src/schemas.ts` 的 `TestScenario` 类型作为输入契约。
+- ⬜ 任务二 Agent 方案已定（ReAct + 领域工具 + LLM judge，详见上方「任务二实现方案」），**P0 待开始**；输入契约复用 `app/src/schemas.ts` 的 `TestScenario`（经 `loadScenarioSet("basic")` 加载）。
 - ⬜ 可视化前端（TS）暂缓。

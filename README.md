@@ -187,12 +187,35 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 - [x] 初始化本项目 git 仓库并关联远程：<https://github.com/Tm-Ys/4gaboards_agent_plus.git>
 - [x] 任务一：功能点提取 + 结构化测试场景生成（长上下文直填；Python 原型 `scenario_generator/` + TS 移植 `app/`）。
 - [ ] 任务一：功能点 / 测试场景的可视化展示（TS + Node）—— 暂缓。
-- [ ] 任务二：实现 ReAct 智能体（规划 / 记忆 / 执行 / 验证），对 `demo.4gaboards.com` 执行测试。
+- [ ] 任务二：实现 ReAct 智能体（规划 / 记忆 / 执行 / 验证），对 `demo.4gaboards.com` 执行测试。**方案已定（见第八节）**，P0 待开始。
 - [ ] 任务二（提升档）：场景变异与典型应用错误识别。
 
 ---
 
-## 八、相关链接
+## 八、任务二实现方案
+
+任务二 = **ReAct 智能体**消费任务一的 `TestScenario`，在 `demo.4gaboards.com` 端到端执行，
+用 **LLM-as-judge** 判定通过/失败。核心 headless，产出结构化轨迹与结果，供前端渲染。
+
+**架构**：ReAct 循环（观察 → 思考 → 执行）+ **两层工具** + 原生 function calling（DeepSeek 支持）：
+
+- **A 层 · 领域工具**：照 4gaBoardsDocs 写、按任务一模块组织（auth / board / list / card / view / settings …），每个对应一项文档能力；**驱动真实 UI**（点真按钮、填真表单），返回结构化领域状态。
+- **B 层 · 通用浏览器工具**：`click / fill / press / scroll / goto / observe / done`，兜底 A 层未覆盖的步骤；`observe()` 即观察本身。
+- **观察空间**：文本可访问性树（AX tree）+ 元素 ref，**模型无关**（适配 DeepSeek 文本模型）；截图作为可选 VLM 增强。
+
+**两条底线（端到端测试有效性）**：
+1. 被测动作必须走**真实 UI**，不得用后端 API 走捷径；**后端 API 仅用于前置数据准备**（登录态、播种数据）。
+2. 验证看**真实渲染页**（AX/截图），不只信工具返回的"成功"——这样才能抓布局/语义错误。
+
+**四要素**：规划（场景 `phases` 作计划骨架）/ 记忆（短期轨迹 + scratchpad）/ 执行（Playwright 工具执行器）/ 验证（两层 LLM judge：步骤检查点 + 场景终判）。
+
+**路线**：P0 浏览器地基 + 工具框架 + 5 个种子工具 → P1 跑通一个 happy_path → P1.5 按模块扩工具库 → P2 judge → P3 批量 harness + 通过率报告 → P4 健壮性 → P5 变异测试（提升档）→ 前端并行。
+
+> 完整设计（两层工具架构、目录设想、已知难点、底线细则）见 [CLAUDE.md](CLAUDE.md)「任务二实现方案」。
+
+---
+
+## 九、相关链接
 
 - 本项目仓库：<https://github.com/Tm-Ys/4gaboards_agent_plus.git>
 - 目标应用源码（仅参考）：<https://github.com/RARgames/4gaBoards>
