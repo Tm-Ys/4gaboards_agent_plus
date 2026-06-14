@@ -6,7 +6,7 @@ import { z } from "zod";
 import { registry } from "./registry";
 
 registry.register({
-  name: "auth.login",
+  name: "auth_login",
   layer: "A",
   description: "用 .env 凭据登录 4gaBoards demo（走真实登录表单：填 email/username + password 并提交）。",
   params: z.object({}),
@@ -22,7 +22,7 @@ registry.register({
 });
 
 registry.register({
-  name: "board.create",
+  name: "board_create",
   layer: "A",
   description:
     "创建看板：点击 Add Board → 填看板名 → 选择所属项目（必填）→ 提交。需指定 project。",
@@ -71,7 +71,7 @@ registry.register({
 });
 
 registry.register({
-  name: "board.open",
+  name: "board_open",
   layer: "A",
   description: "打开指定名称的看板（在侧边栏点击该看板）。",
   params: z.object({ name: z.string().min(1).describe("要打开的看板名") }),
@@ -91,7 +91,7 @@ registry.register({
 });
 
 registry.register({
-  name: "card.create",
+  name: "card_create",
   layer: "A",
   description: "在当前看板的第一个列表底部创建卡片：点击 + Add Card → 填标题 → Enter。需先处于某个看板视图。",
   params: z.object({ title: z.string().min(1).describe("卡片标题") }),

@@ -48,6 +48,22 @@ export async function chatJson(
   return JSON.parse(stripCodeFence(content));
 }
 
+/** 带 tools 的 function-calling 调用（ReAct 循环用）。返回原始 completion。 */
+export async function chatWithTools(
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+  tools: OpenAI.Chat.Completions.ChatCompletionTool[],
+  opts: { temperature?: number; model?: string } = {},
+) {
+  const client = getClient();
+  return client.chat.completions.create({
+    model: opts.model ?? settings.deepseekModel,
+    messages,
+    tools,
+    tool_choice: "auto",
+    temperature: opts.temperature ?? 0.2,
+  });
+}
+
 /** 兜底：剥离个别模型即便 JSON 模式也可能包裹的 ```json 围栏。 */
 function stripCodeFence(text: string): string {
   let t = text.trim();

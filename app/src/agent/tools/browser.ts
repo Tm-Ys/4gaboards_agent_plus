@@ -1,4 +1,5 @@
 // B 层 · 通用浏览器工具：基于"最近观察"的 ref 操作真实页面。兜底 A 层未覆盖的步骤。
+// 工具名用下划线（OpenAI/DeepSeek 函数名仅允许 [a-zA-Z0-9_-]）。
 
 import { z } from "zod";
 import { registry } from "./registry";
@@ -6,7 +7,7 @@ import { registry } from "./registry";
 function resolveRef(ctx: import("./registry").ToolContext, ref: number) {
   const obs = ctx.session.getObs();
   if (ref < 0 || ref >= obs.elements.length) {
-    throw new Error(`ref=${ref} 越界（当前 0..${obs.elements.length - 1}），先 browser.observe 刷新`);
+    throw new Error(`ref=${ref} 越界（当前 0..${obs.elements.length - 1}），先 browser_observe 刷新`);
   }
   return obs.resolve(ref);
 }
@@ -16,7 +17,7 @@ async function reObserve(ctx: import("./registry").ToolContext) {
 }
 
 registry.register({
-  name: "browser.observe",
+  name: "browser_observe",
   layer: "B",
   description: "观察当前页面，返回可交互元素列表（带 ref）。每次动作后调用以刷新页面状态。",
   params: z.object({}),
@@ -31,7 +32,7 @@ registry.register({
 });
 
 registry.register({
-  name: "browser.click",
+  name: "browser_click",
   layer: "B",
   description: "点击最近观察中指定 ref 的元素。",
   params: z.object({ ref: z.number().int().nonnegative() }),
@@ -46,7 +47,7 @@ registry.register({
 });
 
 registry.register({
-  name: "browser.fill",
+  name: "browser_fill",
   layer: "B",
   description: "在最近观察中指定 ref 的输入框填入文本（会先清空）。",
   params: z.object({ ref: z.number().int().nonnegative(), text: z.string() }),
@@ -60,7 +61,7 @@ registry.register({
 });
 
 registry.register({
-  name: "browser.press",
+  name: "browser_press",
   layer: "B",
   description: "按键，如 Enter / Escape / Tab / Control+Enter（用于确认、快捷键、关闭模态等）。",
   params: z.object({ key: z.string().describe("KeyboardEvent key，如 Enter、Escape、Control+Enter") }),
@@ -73,7 +74,7 @@ registry.register({
 });
 
 registry.register({
-  name: "browser.scroll",
+  name: "browser_scroll",
   layer: "B",
   description: "滚动页面。",
   params: z.object({
@@ -90,7 +91,7 @@ registry.register({
 });
 
 registry.register({
-  name: "browser.goto",
+  name: "browser_goto",
   layer: "B",
   description: "导航到指定 URL（慎用，仅在确有需要时）。",
   params: z.object({ url: z.string().url() }),
@@ -103,7 +104,7 @@ registry.register({
 });
 
 registry.register({
-  name: "browser.done",
+  name: "browser_done",
   layer: "B",
   description: "表示当前场景执行结束（任务完成或无法继续）。",
   params: z.object({ result: z.string().describe("一句话结果说明，如 成功完成 / 卡在某步：原因") }),

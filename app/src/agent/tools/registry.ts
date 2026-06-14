@@ -32,6 +32,11 @@ class ToolRegistry {
   private tools = new Map<string, ToolDef>();
 
   register<P>(t: ToolDef<P>): this {
+    if (!/^[a-zA-Z0-9_-]+$/.test(t.name)) {
+      throw new Error(
+        `非法工具名 "${t.name}"：OpenAI/DeepSeek 函数名仅允许 [a-zA-Z0-9_-]（用下划线，不要点）`,
+      );
+    }
     this.tools.set(t.name, t as unknown as ToolDef);
     return this;
   }

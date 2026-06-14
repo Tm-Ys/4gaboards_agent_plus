@@ -17,27 +17,27 @@ async function main() {
   const session = await BrowserSession.launch({ headless: true });
   const ctx: ToolContext = { session, page: session.page };
   try {
-    let r = await registry.execute("auth.login", {}, ctx);
+    let r = await registry.execute("auth_login", {}, ctx);
     console.log("[auth.login]   ", r.summary);
 
-    r = await registry.execute("browser.observe", {}, ctx);
+    r = await registry.execute("browser_observe", {}, ctx);
     console.log("[observe]       ", r.summary);
 
     const stamp = `P0Board-${Date.now().toString().slice(-8)}`;
-    r = await registry.execute("board.create", { name: stamp, project: "Getting started" }, ctx);
+    r = await registry.execute("board_create", { name: stamp, project: "Getting started" }, ctx);
     console.log("[board.create]  ", r.summary, "confirmed=", (r.data as { confirmed?: boolean })?.confirmed);
 
-    r = await registry.execute("board.open", { name: stamp }, ctx);
+    r = await registry.execute("board_open", { name: stamp }, ctx);
     console.log("[board.open]    ", r.summary);
 
     fs.mkdirSync(settings.outputsDir, { recursive: true });
     await session.page.screenshot({ path: path.join(settings.outputsDir, "smoke-after-create.png") });
     console.log("[screenshot]    ", path.join(settings.outputsDir, "smoke-after-create.png"));
 
-    r = await registry.execute("browser.observe", {}, ctx);
+    r = await registry.execute("browser_observe", {}, ctx);
     console.log("[observe board] ", r.summary);
 
-    r = await registry.execute("browser.done", { result: "P0 冒烟完成" }, ctx);
+    r = await registry.execute("browser_done", { result: "P0 冒烟完成" }, ctx);
     console.log("[done]          ", r.summary, "done=", r.done);
   } finally {
     await session.close();

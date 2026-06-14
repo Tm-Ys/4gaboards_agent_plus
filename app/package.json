@@ -10,6 +10,7 @@
   "scripts": {
     "extract": "tsx src/extractFeatures.ts",
     "scenarios": "tsx src/generateScenarios.ts",
+    "run-scenario": "tsx src/agent/cli/run.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
