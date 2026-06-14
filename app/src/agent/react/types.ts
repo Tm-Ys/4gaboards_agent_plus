@@ -13,6 +13,8 @@ export interface ReActStep {
   result?: string;
   /** 该步执行后的页面观察文本（判官证据） */
   observation?: string;
+  /** 多步封装工具的内部步骤与中间观察 */
+  trace?: { label: string; observation?: string }[];
   ok?: boolean;
 }
 

@@ -4,13 +4,19 @@
 
 import type { Locator, Page } from "playwright";
 
-// 视为"可交互"的选择器
+// 视为"可观察"的选择器：可交互元素 + 标题/段落文本（让判官能看到标题等）
 const INTERACTIVE_SELECTOR = [
   "a[href]",
   "button",
   "input",
   "textarea",
   "select",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
   '[role="button"]',
   '[role="link"]',
   '[role="checkbox"]',
@@ -20,6 +26,7 @@ const INTERACTIVE_SELECTOR = [
   '[role="option"]',
   '[role="combobox"]',
   '[role="textbox"]',
+  '[role="heading"]',
   '[contenteditable="true"]',
 ].join(", ");
 

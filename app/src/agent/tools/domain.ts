@@ -3,7 +3,7 @@
 // card.* 选择器基于 docs 描述，将在 P1.5 按板视图实际 DOM 校准。
 
 import { z } from "zod";
-import { registry } from "./registry";
+import { registry, type TraceStep } from "./registry";
 
 registry.register({
   name: "auth_login",
@@ -25,33 +25,52 @@ registry.register({
   name: "board_create",
   layer: "A",
   description:
-    "创建看板：点击 Add Board → 填看板名 → 选择所属项目（必填）→ 提交。需指定 project。",
+    "创建看板（一步完成，比手动多步更稳）：点击 Add Board → 填看板名 → 选项目(必填) → 可选选模板 → 提交。可搜索下拉用键入+Tab 方式，避免浮层遮挡。",
   params: z.object({
     name: z.string().min(1).describe("新看板名称"),
     project: z.string().min(1).describe("所属项目名（必填，如 'Getting started'）"),
+    template: z
+      .string()
+      .optional()
+      .describe("模板名（可选，如 'Simple' 会带预置列表；不填用 Empty 空模板）"),
   }),
-  run: async ({ name, project }, ctx) => {
-    // 1. 打开 Add Board 模态（开启前只有一个 "Add Board"）
-    await ctx.page.getByRole("button", { name: "Add Board" }).first().click({ timeout: 10_000 });
-    await ctx.page.waitForTimeout(800);
-    // 2. 填看板名
+  run: async ({ name, project, template }, ctx) => {
+    const trace: TraceStep[] = [];
+    // 模态内可搜索下拉的输入框：第 0 个=项目，第 1 个=模板
+    const dropdownSearch = ctx.page.locator('[class*="Dropdown_dropdownSearchInput"]');
     const nameInput = ctx.page.getByPlaceholder("Enter board name...", { exact: false });
-    await nameInput.waitFor({ timeout: 10_000 });
-    await nameInput.fill(name);
-    // 3. 选项目（可搜索下拉）：点开 → 点匹配项；失败则键入搜索 + selectFirstOnSearch
-    const projInput = ctx.page.getByPlaceholder("Select project", { exact: false });
-    await projInput.first().click();
-    await ctx.page.waitForTimeout(400);
-    const opt = ctx.page.getByRole("option", { name: project }).first();
-    if (await opt.count().catch(() => 0)) {
-      await opt.click();
-    } else {
-      await projInput.first().fill(project);
-      await ctx.page.waitForTimeout(500);
-      await ctx.page.keyboard.press("Enter");
+    // 1. 打开 Add Board 模态（幂等：若已打开则跳过，避免 agent 先手动开过、再重复点 opener）
+    if (!(await nameInput.isVisible().catch(() => false))) {
+      await ctx.page.getByRole("button", { name: "Add Board" }).first().click({ timeout: 10_000 });
+      await ctx.page.waitForTimeout(800);
     }
+    await nameInput.waitFor({ timeout: 10_000 });
+    // 记录模态打开后的观察（判官核对段落1"弹窗出现/含输入框、模板、导入"用）
+    trace.push({ label: "打开 Add Board 模态", observation: (await ctx.session.observe()).text });
+    // 2. 看板名
+    await nameInput.fill(name);
+    trace.push({ label: `填看板名 "${name}"` });
+    // 3. 项目：键入搜索（selectFirstOnSearch 自动选中）+ Tab 关闭下拉
+    const projInput = dropdownSearch.nth(0);
+    await projInput.click({ timeout: 10_000 });
     await ctx.page.waitForTimeout(300);
-    // 4. 提交：模态提交按钮也叫 "Add Board"，DOM 顺序在开启按钮之后 → 取 .last()
+    await projInput.fill(project);
+    await ctx.page.waitForTimeout(450);
+    await ctx.page.keyboard.press("Tab");
+    await ctx.page.waitForTimeout(300);
+    trace.push({ label: `选项目 "${project}"` });
+    // 4. 模板（可选）：同样键入搜索 + Tab
+    if (template) {
+      const tplInput = dropdownSearch.nth(1);
+      await tplInput.click({ timeout: 10_000 });
+      await ctx.page.waitForTimeout(300);
+      await tplInput.fill(template);
+      await ctx.page.waitForTimeout(450);
+      await ctx.page.keyboard.press("Tab");
+      await ctx.page.waitForTimeout(300);
+      trace.push({ label: `选模板 "${template}"` });
+    }
+    // 5. 提交：模态提交按钮也叫 "Add Board"，DOM 顺序在开启按钮之后 → .last()
     const addBtns = ctx.page.getByRole("button", { name: "Add Board" });
     if ((await addBtns.count()) >= 2) {
       await addBtns.last().click();
@@ -60,12 +79,25 @@ registry.register({
     }
     await ctx.page.waitForTimeout(1500);
     await ctx.session.waitForReady();
-    const o = await ctx.session.observe();
+    let o = await ctx.session.observe();
+    trace.push({ label: "提交创建后", observation: o.text });
     const created = o.elements.some((e) => e.name.includes(name));
+    if (created) {
+      // 打开新看板，提供"看板视图/预置列表"证据（板视图列表经 socket 加载，需等待）
+      const link = ctx.page.getByRole("link", { name }).first();
+      await link.click({ timeout: 10_000 }).catch(() => {});
+      await ctx.page.waitForLoadState("networkidle", { timeout: 20_000 }).catch(() => {});
+      await ctx.page.waitForTimeout(3000);
+      o = await ctx.session.observe();
+      trace.push({ label: "打开新看板视图", observation: o.text });
+    }
     return {
       ok: created,
-      summary: created ? `已创建看板 "${name}"（项目 ${project}）` : `已提交创建看板 "${name}"（请在观察中确认）`,
-      data: { name, project, url: o.url, confirmed: created },
+      summary: created
+        ? `已创建看板 "${name}"（项目 ${project}${template ? `，模板 ${template}` : ""}）`
+        : `已提交创建看板 "${name}"（请在观察中确认）`,
+      data: { name, project, template, url: o.url, confirmed: created },
+      trace,
     };
   },
 });

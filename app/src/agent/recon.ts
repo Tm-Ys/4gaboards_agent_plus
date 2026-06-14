@@ -91,6 +91,18 @@ async function main() {
   const modalObs = await observe(page);
   console.log("\n=== Add Board 模态观察 ===");
   console.log(modalObs.text);
+  // dump 模态内 input 定位信息
+  const inputs = await page
+    .locator("input:visible")
+    .evaluateAll((els) =>
+      els.map((e) => ({
+        placeholder: e.getAttribute("placeholder"),
+        value: (e as HTMLInputElement).value,
+        cls: (e.getAttribute("class") || "").slice(0, 48),
+      })),
+    );
+  console.log("\n=== 模态 input 详情 ===");
+  console.log(JSON.stringify(inputs, null, 2));
   await page.screenshot({ path: path.join(settings.outputsDir, "recon-addboard.png"), fullPage: false });
 
   await context.close();

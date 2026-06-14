@@ -23,12 +23,16 @@ async function main() {
     r = await registry.execute("browser_observe", {}, ctx);
     console.log("[observe]       ", r.summary);
 
-    const stamp = `P0Board-${Date.now().toString().slice(-8)}`;
-    r = await registry.execute("board_create", { name: stamp, project: "Getting started" }, ctx);
-    console.log("[board.create]  ", r.summary, "confirmed=", (r.data as { confirmed?: boolean })?.confirmed);
+    const stamp = `P2Board-${Date.now().toString().slice(-8)}`;
+    r = await registry.execute("board_create", { name: stamp, project: "Getting started", template: "Simple" }, ctx);
+    console.log("[board_create]  ", r.summary, "confirmed=", (r.data as { confirmed?: boolean })?.confirmed);
 
     r = await registry.execute("board_open", { name: stamp }, ctx);
-    console.log("[board.open]    ", r.summary);
+    console.log("[board_open]    ", r.summary);
+    // 验证 Simple 模板预置列表是否出现
+    const lists = (await registry.execute("browser_observe", {}, ctx)).data as { elements?: { name: string }[] };
+    const listNames = (lists.elements ?? []).map((e) => e.name).join(" | ");
+    console.log("[board lists]   ", listNames.slice(0, 200));
 
     fs.mkdirSync(settings.outputsDir, { recursive: true });
     await session.page.screenshot({ path: path.join(settings.outputsDir, "smoke-after-create.png") });

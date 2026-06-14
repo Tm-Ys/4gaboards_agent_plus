@@ -62,13 +62,28 @@ export async function runReactLoop(
       }
       const result = await registry.execute(name, args, ctx);
       const obsText = safeObsText(ctx);
-      const toolContent = result.summary + (obsText ? `\n\n-- 最新观察 --\n${obsText}` : "");
+      const traceText = result.trace?.length
+        ? "\n-- 工具内部步骤 --\n" +
+          result.trace
+            .map((t) => `· ${t.label}${t.observation ? "：\n" + t.observation : ""}`)
+            .join("\n")
+        : "";
+      const toolContent = result.summary + traceText + (obsText ? `\n\n-- 最新观察 --\n${obsText}` : "");
       messages.push({
         role: "tool",
         tool_call_id: tc.id,
         content: toolContent,
       } as OpenAI.Chat.Completions.ChatCompletionToolMessageParam);
-      steps.push({ step, thought, tool: name, args, result: result.summary, observation: obsText, ok: result.ok });
+      steps.push({
+        step,
+        thought,
+        tool: name,
+        args,
+        result: result.summary,
+        observation: obsText,
+        trace: result.trace,
+        ok: result.ok,
+      });
 
       if (result.done) {
         return finalize(true, false, steps, ctx, result.summary);

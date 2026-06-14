@@ -10,6 +10,13 @@ export interface ToolContext {
   page: Page;
 }
 
+export interface TraceStep {
+  /** 子步骤标签，如 "打开 Add Board 模态" */
+  label: string;
+  /** 该子步骤的页面观察文本（判官证据；多步封装工具应记录关键中间状态） */
+  observation?: string;
+}
+
 export interface ToolResult {
   ok: boolean;
   /** 给 LLM 的人类可读结果摘要 */
@@ -18,6 +25,8 @@ export interface ToolResult {
   data?: unknown;
   /** 是否表示当前场景执行完成（done 工具用） */
   done?: boolean;
+  /** 多步封装工具的内部步骤与中间观察，供判官核对中间状态 */
+  trace?: TraceStep[];
 }
 
 export interface ToolDef<P = Record<string, unknown>> {
