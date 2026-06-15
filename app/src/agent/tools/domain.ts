@@ -4,7 +4,7 @@
 
 import { z } from "zod";
 import type { Locator, Page } from "playwright";
-import { registry, type TraceStep } from "./registry";
+import { registry, type TraceStep, type ToolContext } from "./registry";
 
 // 设置页基础：demo 域名 + 等待设置表格渲染（4gaBoards 设置页异步 fetch core settings，慢）。
 const DEMO_ORIGIN = (process.env.TARGET_APP_DEMO_URL ?? "https://demo.4gaboards.com").replace(/\/+$/, "");
@@ -25,6 +25,66 @@ async function openSettingsPage(page: Page, kind: "preferences" | "account" | "u
 /** 读某设置行的文本（压缩空白、截断），作判官核对 Current Value 的证据。 */
 async function readRowText(row: Locator): Promise<string> {
   return (await row.innerText().catch(() => "")).replace(/\s+/g, " ").trim().slice(0, 200);
+}
+
+// ── 视图与卡片的通用 helper（card_open / view_switch / list_view_* / card_edit_description 共用）──
+
+/** 拼 namespace 全名：批量资源加前缀，单场景 namespace 为空则原名。 */
+function namespaced(ctx: ToolContext, name: string): string {
+  return ctx.namespace ? `${ctx.namespace}-${name}` : name;
+}
+
+/** 若当前在卡片详情页（/cards/:id），Escape 关闭 modal——它会遮挡视图切换按钮与列表视图列头。返回是否关闭过。 */
+async function closeCardModalIfOpen(page: Page): Promise<boolean> {
+  if (page.url().includes("/cards/")) {
+    await page.keyboard.press("Escape").catch(() => {});
+    await page.waitForTimeout(500);
+    return true;
+  }
+  return false;
+}
+
+/** 当前是否处于列表视图（DOM 特征：表格列头；视图切换不改变 URL，不能靠 url() 判定）。 */
+async function isListView(page: Page): Promise<boolean> {
+  return (await page.locator('th[class*="headerCell"]').count().catch(() => 0)) > 0;
+}
+
+/** 确保卡片详情 modal 已打开（card_open + card_edit_description 共用）。双回退查 card：namespace 全名 → 原名。 */
+async function ensureCardOpen(
+  page: Page,
+  ctx: ToolContext,
+  cardName: string,
+): Promise<{ ok: boolean; fullName: string; url: string; reason?: string }> {
+  const fullName = namespaced(ctx, cardName);
+  // 幂等：同名 card modal 已开
+  if (page.url().includes("/cards/") && (await page.getByRole("dialog").isVisible().catch(() => false))) {
+    return { ok: true, fullName, url: page.url() };
+  }
+  let card = page.locator(`[class*="Card_name"][title="${fullName}"]`).first();
+  if ((await card.count().catch(() => 0)) === 0) {
+    card = page.locator(`[class*="Card_name"][title="${cardName}"]`).first();
+    if ((await card.count().catch(() => 0)) === 0) {
+      return { ok: false, fullName, url: page.url(), reason: `未找到卡片 "${cardName}"（确认在看板视图且名称准确）` };
+    }
+  }
+  await card.scrollIntoViewIfNeeded().catch(() => {});
+  await card.click({ timeout: 10_000 }).catch(() => {});
+  await page.waitForSelector('[role="dialog"]', { timeout: 10_000 }).catch(() => {});
+  await page.waitForTimeout(800); // socket 拉 card 详情
+  const opened = page.url().includes("/cards/") || (await page.getByRole("dialog").isVisible().catch(() => false));
+  return { ok: opened, fullName, url: page.url(), reason: opened ? undefined : "点击卡片后详情 modal 未出现" };
+}
+
+/** 确保处于列表视图（不在则点切换按钮；card modal 残留先关）。返回是否触发了切换。 */
+async function ensureListView(page: Page): Promise<boolean> {
+  await closeCardModalIfOpen(page);
+  if (await isListView(page)) return false;
+  const btn = page.getByTitle(/switch to list view|切换到列表视图/i).first();
+  if ((await btn.count().catch(() => 0)) === 0) return false;
+  await btn.click({ timeout: 10_000 }).catch(() => {});
+  await page.waitForTimeout(1000);
+  await page.waitForSelector('th[class*="headerCell"]', { timeout: 15_000 }).catch(() => {});
+  return true;
 }
 
 registry.register({
@@ -415,6 +475,177 @@ registry.register({
         ? `已把卡片 "${cardName}" 拖到列表 "${targetListName}"`
         : `已拖动 "${cardName}"（拖后=${afterList}，目标=${targetDropId}，请观察确认）`,
       data: { cardName, targetListName, beforeList, afterList, targetDropId, confirmed: ok },
+      trace,
+    };
+  },
+});
+
+registry.register({
+  name: "card_open",
+  layer: "A",
+  description:
+    "打开某张卡片的详情弹窗（点击卡片标题，URL 变 /cards/:id）。是编辑描述/标签/截止日期/移动等卡片操作的前置。幂等：若同名 card modal 已打开则跳过。card 名会自动加 namespace 前缀（批量场景给创建时的短名即可）。trace 回报打开前后的页面观察。",
+  params: z.object({
+    cardName: z.string().min(1).describe("卡片标题（与卡片显示名一致；批量场景用创建时的短名）"),
+  }),
+  run: async ({ cardName }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+    trace.push({ label: "点击卡片前", observation: (await ctx.session.observe()).text });
+    const r = await ensureCardOpen(page, ctx, cardName);
+    if (!r.ok) {
+      return {
+        ok: false,
+        summary: r.reason ?? `未能打开卡片 "${cardName}"`,
+        data: { cardName, fullName: r.fullName, url: r.url },
+        trace,
+      };
+    }
+    const o = await ctx.session.observe();
+    trace.push({ label: "已打开卡片详情", observation: o.text });
+    return {
+      ok: true,
+      summary: `已打开卡片 "${r.fullName}" 详情；URL=${r.url}`,
+      data: { cardName, fullName: r.fullName, url: r.url, modalOpened: true, confirmed: true },
+      trace,
+    };
+  },
+});
+
+registry.register({
+  name: "view_switch",
+  layer: "A",
+  description:
+    "在当前看板切换视图：board=看板视图（卡片列表拖拽）；list=列表视图（表格列、可排序/列显隐/适应宽度）。驱动真实 UI：点视图切换按钮（switchViewButton）。幂等：已处于目标视图则跳过。若卡片详情弹窗开着会先关闭（否则遮挡按钮）。trace 回报切换前后视图观察。",
+  params: z.object({
+    view: z.enum(["board", "list"]).describe("目标视图：board=看板视图；list=列表视图"),
+  }),
+  run: async ({ view }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+    const closedModal = await closeCardModalIfOpen(page);
+    if (closedModal) trace.push({ label: "关闭残留卡片详情弹窗" });
+
+    const btn = page
+      .getByTitle(view === "board" ? /switch to board view|切换到看板视图/i : /switch to list view|切换到列表视图/i)
+      .first();
+    if ((await btn.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: `未找到切换到 ${view} 视图的按钮（确认在某个看板页）`, trace };
+    }
+    const beforeActive = await btn.evaluate((el) => (el.className || "").includes("active")).catch(() => false);
+    trace.push({ label: `读当前视图：${view} active=${beforeActive}` });
+
+    if (!beforeActive) {
+      await btn.click({ timeout: 10_000 }).catch(() => {});
+      // 视图切换不改变 URL，靠 DOM 特征等渲染
+      if (view === "list") {
+        await page.waitForSelector('th[class*="headerCell"]', { timeout: 15_000 }).catch(() => {});
+      } else {
+        await page.waitForSelector('[class*="List_headerName"]', { timeout: 15_000 }).catch(() => {});
+      }
+      await page.waitForTimeout(800);
+    }
+
+    const confirmed =
+      view === "list"
+        ? await isListView(page)
+        : (await page.locator('[class*="List_headerName"]').count().catch(() => 0)) > 0;
+    const o = await ctx.session.observe();
+    trace.push({ label: "切换后视图观察", observation: o.text });
+    // beforeActive 说明已处于目标视图（即使 DOM 特征未匹配也算成功）
+    const ok = confirmed || beforeActive;
+    return {
+      ok,
+      summary: beforeActive
+        ? `已处于 ${view} 视图${confirmed ? "（幂等跳过）" : ""}`
+        : confirmed
+          ? `已切换到 ${view} 视图`
+          : `已点击切换到 ${view} 视图（请在观察中确认）`,
+      data: { view, beforeActive, confirmed, url: o.url },
+      trace,
+    };
+  },
+});
+
+registry.register({
+  name: "card_edit_description",
+  layer: "A",
+  description:
+    "编辑某张卡片的描述（markdown）。驱动真实 UI：打开卡片详情 → 进描述编辑 → 填文本 → 提交（Save 或 Ctrl+Enter）。幂等打开 modal。trace 回报编辑前后描述区文本。card 名自动加 namespace 前缀。",
+  params: z.object({
+    cardName: z.string().min(1).describe("卡片标题（工具自动加 namespace 前缀）"),
+    text: z.string().describe("要写入的描述文本（markdown）"),
+    submit: z
+      .enum(["save", "ctrl_enter"])
+      .optional()
+      .describe("提交方式：save=点 Save 按钮；ctrl_enter=Ctrl+Enter 快捷键；默认 save"),
+  }),
+  run: async ({ cardName, text, submit }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+    // 1. 确保卡片 modal 打开
+    const r = await ensureCardOpen(page, ctx, cardName);
+    if (!r.ok) {
+      trace.push({ label: `打开卡片失败：${r.reason}` });
+      return { ok: false, summary: r.reason ?? `未能打开卡片 "${cardName}"`, data: { cardName }, trace };
+    }
+    trace.push({ label: `已打开卡片 "${r.fullName}" 详情` });
+
+    // 2. 进描述编辑态：先试已有描述（Edit Description），再试空描述（Add Description）
+    let entry = page.getByTitle(/edit description|编辑描述/i).first();
+    if ((await entry.count().catch(() => 0)) === 0) {
+      entry = page.getByTitle(/add description|添加描述/i).first();
+    }
+    if ((await entry.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: `卡片 "${r.fullName}" 详情里未找到描述编辑入口`, data: { cardName: r.fullName }, trace };
+    }
+    await entry.scrollIntoViewIfNeeded().catch(() => {});
+    await entry.click({ timeout: 10_000 }).catch(() => {});
+    trace.push({ label: "点击描述编辑入口" });
+
+    // 3. 等 textarea（@uiw/md-editor 渲染，稳定 class）
+    await page.waitForSelector(".w-md-editor-text-input", { timeout: 8_000 }).catch(() => {});
+    const ta = page.locator(".w-md-editor-text-input").first();
+    if ((await ta.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: "描述编辑器 textarea 未出现", data: { cardName: r.fullName }, trace };
+    }
+
+    // 4. 填文本（fill 自动清空；@uiw/md-editor 的 fill 偶不触发 onChange，失败回退 keyboard.type）
+    await ta.click({ timeout: 5_000 }).catch(() => {});
+    await page.waitForTimeout(200);
+    await ta.fill(text).catch(async () => {
+      trace.push({ label: "fill 未触发 onChange，回退 keyboard.type" });
+      await page.keyboard.type(text, { delay: 5 });
+    });
+    trace.push({ label: `填描述文本（${text.length} 字符）` });
+
+    // 5. 提交
+    const mode = submit ?? "save";
+    if (mode === "ctrl_enter") {
+      await ta.press("Control+Enter");
+      trace.push({ label: "Ctrl+Enter 提交" });
+    } else {
+      const save = page.getByRole("button", { name: /^save$|^保存$/i }).last();
+      await save.click({ timeout: 8_000 }).catch(() => {});
+      trace.push({ label: "点击 Save 提交" });
+    }
+    await page.waitForTimeout(1000); // onUpdate → socket 写库 → 重渲染为 MDPreview
+
+    // 6. 确认：读描述区文本（MDPreview 渲染在 descriptionText）
+    const descText = await page.locator('[class*="descriptionText"]').first().innerText().catch(() => "");
+    const norm = descText.replace(/\s+/g, " ").trim();
+    const preview = norm.slice(0, 200);
+    const head = text.slice(0, 20).trim();
+    const saved = head.length > 0 && norm.toLowerCase().includes(head.toLowerCase());
+    trace.push({ label: "保存后描述区", observation: preview || "(空)" });
+    const o = await ctx.session.observe();
+    trace.push({ label: "最终观察", observation: o.text });
+    return {
+      ok: saved,
+      summary: saved
+        ? `已保存卡片 "${r.fullName}" 描述（${text.length} 字符）`
+        : `已提交描述编辑（请在观察中确认；描述区="${preview}"）`,
+      data: { cardName: r.fullName, text, submit: mode, saved, descriptionPreview: preview, url: o.url },
       trace,
     };
   },

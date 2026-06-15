@@ -34,7 +34,7 @@ async function main(): Promise<number> {
   const filter: Record<string, unknown> = {};
   if (diffSet) { filter.difficulty = [...diffSet]; list = list.filter((s) => diffSet.has(s.difficulty)); }
   if (tagSet) { filter.tag = [...tagSet]; list = list.filter((s) => s.tags.some((t) => tagSet.has(t))); }
-  if (feature) { filter.feature = feature; list = list.filter((s) => s.feature_id === feature); }
+  if (feature) { filter.feature = feature; list = list.filter((s) => s.feature_id.startsWith(feature)); }
   if (typeof args.limit === "string") {
     const n = Number(args.limit) || list.length;
     list = list.slice(0, n);
