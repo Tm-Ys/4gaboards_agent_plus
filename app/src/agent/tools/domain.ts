@@ -152,22 +152,26 @@ registry.register({
 registry.register({
   name: "card_create",
   layer: "A",
-  description: "在当前看板的第一个列表底部创建卡片：点击 + Add Card → 填标题 → Enter。需先处于某个看板视图。",
+  description: "在当前看板的第一个列表底部创建卡片：点击 Add Card → 填标题 → Enter。需先处于某个看板视图。",
   params: z.object({ title: z.string().min(1).describe("卡片标题") }),
   run: async ({ title }, ctx) => {
     const fullTitle = ctx.namespace ? `${ctx.namespace}-${title}` : title;
-    const addCard = ctx.page.getByRole("button", { name: /\+\s*add card/i }).first();
-    await addCard.waitFor({ timeout: 10_000 });
+    // 等看板视图 list 渲染（board_create 后立即 card_create 时，list 经 socket 加载较慢）
+    await ctx.page.waitForSelector('[class*="List_headerName"]', { timeout: 20_000 }).catch(() => {});
+    const addCard = ctx.page.getByRole("button", { name: /add card/i }).first();
+    await addCard.waitFor({ timeout: 15_000 });
     await addCard.click();
-    await ctx.page.waitForTimeout(500);
-    // 卡片标题输入框（一般 placeholder 含 "card" 或为空文本框）
-    const titleInput = ctx.page.locator('textarea:visible, input:visible').last();
-    await titleInput.waitFor({ timeout: 5_000 });
+    await ctx.page.waitForTimeout(800);
+    // card 创建框是全局 textarea（placeholder "Enter card name..."），不在 list draggable 内
+    const titleInput = ctx.page.getByPlaceholder(/enter card name/i).first();
+    await titleInput.waitFor({ timeout: 8_000 });
     await titleInput.fill(fullTitle);
     await ctx.page.keyboard.press("Enter");
     await ctx.page.waitForTimeout(1000);
+    // observe 看不到 card（card 是 div 无 role，不在 INTERACTIVE_SELECTOR），用语义 selector 直接确认
+    const card = ctx.page.locator(`[class*="Card_name"][title="${fullTitle}"]`);
+    const created = (await card.count().catch(() => 0)) > 0;
     const o = await ctx.session.observe();
-    const created = o.elements.some((e) => e.name.includes(fullTitle));
     return {
       ok: created,
       summary: created ? `已创建卡片 "${fullTitle}"` : `已提交创建卡片 "${fullTitle}"（请在观察中确认）`,
@@ -338,6 +342,79 @@ registry.register({
       ok: true,
       summary: `已将 "${name}" 设为 "${value}"${confirmed ? "（行文本已确认）" : "（请在观察中确认）"}`,
       data: { name, value, rowText, confirmed, url: o.url },
+      trace,
+    };
+  },
+});
+
+registry.register({
+  name: "card_drag",
+  layer: "A",
+  description:
+    "把当前看板视图里的某张卡片拖到指定列表（看板核心交互）。驱动真实拖拽：用 page.mouse down→多步 move→up 模拟 react-beautiful-dnd（不能用 click/dragAndDrop——click 会打开卡片详情、dragAndDrop 不触发 onDragEnd）。trace 回报拖动前后卡片所在的列表（data-rbd-droppable-id）。需先处于某看板视图。",
+  params: z.object({
+    cardName: z.string().min(1).describe("要拖动的卡片标题（与卡片显示名一致）"),
+    targetListName: z.string().min(1).describe("目标列表名（列表标题，如 Open / Todo / In Progress / Done）"),
+  }),
+  run: async ({ cardName, targetListName }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+
+    // 定位 card：标题锚点 → 上溯到 rbd draggable 根（observation 看不到 card 根，必须语义 selector）
+    const cardTitle = page.locator(`[class*="Card_name"][title="${cardName}"]`).first();
+    if ((await cardTitle.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: `未找到卡片 "${cardName}"（确认在看板视图且卡片名准确）`, trace };
+    }
+    const cardRoot = cardTitle.locator("xpath=ancestor::*[@data-rbd-draggable-id][1]").first();
+    const cardBox = await cardRoot.boundingBox();
+    if (!cardBox) return { ok: false, summary: `卡片 "${cardName}" 无法取坐标`, trace };
+
+    // 定位目标 list 的 drop 区：标题锚点 → list 根 → 内部主 droppable（^="list:" 排除 listAdd:/listCollapsed:）
+    const listHeader = page.locator(`[class*="List_headerName"][title="${targetListName}"]`).first();
+    if ((await listHeader.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: `未找到列表 "${targetListName}"`, trace };
+    }
+    const listRoot = listHeader.locator("xpath=ancestor::*[@data-rbd-draggable-id][1]").first();
+    const dropZone = listRoot.locator('[data-rbd-droppable-id^="list:"]').first();
+    const targetBox = await dropZone.boundingBox();
+    if (!targetBox) return { ok: false, summary: `列表 "${targetListName}" 的拖放区无法取坐标`, trace };
+    const targetDropId = await dropZone.getAttribute("data-rbd-droppable-id").catch(() => "?");
+
+    const beforeList = await cardRoot
+      .evaluate((el) => el.closest("[data-rbd-droppable-id]")?.getAttribute("data-rbd-droppable-id") ?? "?")
+      .catch(() => "?");
+    trace.push({ label: `拖动前卡片所在 droppable=${beforeList}（目标 ${targetDropId}）` });
+
+    // 拖拽：move 到 card 中心 → down → 多步插值 move 到 list 中心 → up（rbd 需连续 move 触发 lift/drop）
+    const sx = cardBox.x + cardBox.width / 2;
+    const sy = cardBox.y + cardBox.height / 2;
+    const ex = targetBox.x + targetBox.width / 2;
+    const ey = targetBox.y + targetBox.height / 2;
+    await page.mouse.move(sx, sy);
+    await page.waitForTimeout(150);
+    await page.mouse.down();
+    await page.waitForTimeout(200);
+    const steps = 20;
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      await page.mouse.move(sx + (ex - sx) * t, sy + (ey - sy) * t, { steps: 1 });
+      await page.waitForTimeout(20);
+    }
+    await page.waitForTimeout(150);
+    await page.mouse.up();
+    await page.waitForTimeout(1000); // 等 onDragEnd → moveCard → socket 写库
+
+    const afterList = await cardRoot
+      .evaluate((el) => el.closest("[data-rbd-droppable-id]")?.getAttribute("data-rbd-droppable-id") ?? "?")
+      .catch(() => "?");
+    trace.push({ label: `拖动后卡片所在 droppable=${afterList}` });
+    const ok = afterList !== "?" && afterList === targetDropId;
+    return {
+      ok,
+      summary: ok
+        ? `已把卡片 "${cardName}" 拖到列表 "${targetListName}"`
+        : `已拖动 "${cardName}"（拖后=${afterList}，目标=${targetDropId}，请观察确认）`,
+      data: { cardName, targetListName, beforeList, afterList, targetDropId, confirmed: ok },
       trace,
     };
   },
