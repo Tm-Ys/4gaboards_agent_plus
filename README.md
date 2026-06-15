@@ -187,16 +187,17 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 - [x] 初始化本项目 git 仓库并关联远程：<https://github.com/Tm-Ys/4gaboards_agent_plus.git>
 - [x] 任务一：功能点提取 + 结构化测试场景生成（长上下文直填；Python 原型 `scenario_generator/` + TS 移植 `app/`）。
 - [ ] 任务一：功能点 / 测试场景的可视化展示（TS + Node）—— 暂缓。
-- [~] 任务二：ReAct 智能体（规划/记忆/执行/验证）对 `demo.4gaboards.com` 执行测试。**P0–P3 已完成**（Agent + 独立判官 + 批量 harness），**基线通过率 43%**（见第八节）；下一步 P1.5 补工具库。
+- [~] 任务二：ReAct 智能体（规划/记忆/执行/验证）对 `demo.4gaboards.com` 执行测试。**P0–P3 + P1.5 已完成**：基线通过率 **43%**（30 个 easy+happy_path），P1.5 新增 preferences 设置簇工具、settings 簇批量 **68%**（19 个，13 PASS）；并定位到 instance 开关簇 0/13 实为 demo 站 `demoMode` 物理禁用（环境受限，不计入分母）。下一步 P4 健壮性。
 - [ ] 任务二（提升档）：场景变异与典型应用错误识别。
 
 ---
 
 ## 八、任务二实现方案
 
-> **实现状态（2026-06）**：P0–P3 已完成并跑通。Agent（Playwright + 两层工具 + function-calling）、
-> 独立 LLM 判官、批量 harness 全部就绪。**基线通过率 43%**（30 个 easy+happy_path）：
-> board/admin/account 类全过；**instance 设置开关类 0/13 待补工具**（下一步 P1.5）。
+> **实现状态（2026-06）**：P0–P3 + **P1.5 已完成**。Agent（Playwright + 两层工具 + function-calling）、
+> 独立 LLM 判官、批量 harness 全部就绪。**基线通过率 43%**（30 个 easy+happy_path）：board/admin/account 类全过。
+> **P1.5**：新增 preferences 设置簇工具（`settings_open`/`settings_toggle`/`settings_select`），settings 簇批量 **68%**（19 个，13 PASS）；
+> 并侦察证伪 instance 开关簇 0/13 的「缺工具」假设——真因是 demo 站 `demoMode=true` 物理禁用开关（环境受限、不计入分母，详见 `app/outputs/basic/README.md`）。下一步 P4 健壮性（批量 state 隔离 / 拖拽 / demo 数据清理 / 并发）。
 > 运行：`cd app && npm run run-scenario -- --id <id>` / `npm run run-batch -- --difficulty easy --tag happy_path --limit 30`。
 
 任务二 = **ReAct 智能体**消费任务一的 `TestScenario`，在 `demo.4gaboards.com` 端到端执行，
@@ -214,7 +215,7 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 
 **四要素**：规划（场景 `phases` 作计划骨架）/ 记忆（短期轨迹 + scratchpad）/ 执行（Playwright 工具执行器）/ 验证（两层 LLM judge：步骤检查点 + 场景终判）。
 
-**路线**：P0 浏览器地基 + 工具框架 + 5 个种子工具 → P1 跑通一个 happy_path → P1.5 按模块扩工具库 → P2 judge → P3 批量 harness + 通过率报告 → P4 健壮性 → P5 变异测试（提升档）→ 前端并行。
+**路线**：✅ P0 浏览器地基 + 工具框架 → ✅ P1 跑通 happy_path → ✅ P1.5 设置簇工具（settings 68%）→ ✅ P2 judge → ✅ P3 批量 harness + 通过率报告 → ⬜ P4 健壮性（state 隔离 / 拖拽 / 清理 / 并发）→ ⬜ P5 变异测试（提升档）→ 前端。
 
 > 完整设计（两层工具架构、目录设想、已知难点、底线细则）见 [CLAUDE.md](CLAUDE.md)「任务二实现方案」。
 
