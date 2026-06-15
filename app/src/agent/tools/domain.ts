@@ -650,3 +650,194 @@ registry.register({
     };
   },
 });
+
+registry.register({
+  name: "list_view_menu_action",
+  layer: "A",
+  description:
+    "在列表视图执行右上角 Ellipsis(Edit List View) 菜单动作：select_columns(打开列选择面板)/reset_visibility(重置列显示为默认)/fit_content(适应内容宽度)/fit_screen(适应屏幕宽度)/reset_sorting(重置列排序)。驱动真实 UI：自动切到列表视图 → 开菜单 → 点对应项。select_columns 会留在列选择面板（后续用 list_view_toggle_column 显隐列）。trace 回报切换/菜单/执行后观察。",
+  params: z.object({
+    action: z
+      .enum(["select_columns", "reset_visibility", "fit_content", "fit_screen", "reset_sorting"])
+      .describe(
+        "select_columns=打开列选择面板；reset_visibility=重置列显示为默认；fit_content=适应内容宽度；fit_screen=适应屏幕宽度；reset_sorting=重置列排序",
+      ),
+  }),
+  run: async ({ action }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+    const switched = await ensureListView(page);
+    if (switched) trace.push({ label: "已切换到列表视图" });
+
+    const ellipsis = page.getByTitle(/edit list view|编辑列表视图/i).first();
+    if ((await ellipsis.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: "未找到列表视图的 Edit List View(Ellipsis) 菜单按钮（确认已切到列表视图）", trace };
+    }
+    await ellipsis.click({ timeout: 10_000 }).catch(() => {});
+    await page.waitForTimeout(500); // FloatingPortal 渲染
+    trace.push({ label: "已打开 Edit List View 菜单" });
+
+    // fit_content / fit_screen 英文都含 "Adjust Columns to Fit"，按结尾区分；中文"重置列宽"(content) vs "适应屏幕宽度"(screen)
+    const patterns: Record<string, RegExp> = {
+      select_columns: /select columns|选择列/i,
+      reset_visibility: /reset column visibility|重置列显示/i,
+      fit_content: /adjust columns to fit content$|重置列宽$/i,
+      fit_screen: /fit screen|适应屏幕宽度/i,
+      reset_sorting: /reset column sorting|重置列排序/i,
+    };
+    const item = page.getByRole("button", { name: patterns[action] }).first();
+    if ((await item.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: `菜单中未找到 "${action}" 选项`, trace };
+    }
+    await item.click({ timeout: 8_000 }).catch(() => {});
+    await page.waitForTimeout(800); // socket 写 userPrefs
+
+    const o = await ctx.session.observe();
+    const extra: Record<string, unknown> = {};
+    if (action === "select_columns") {
+      extra.columnsPanelOpen = await page.getByText(/select columns|选择列/i).first().isVisible().catch(() => false);
+    }
+    trace.push({ label: `执行 ${action} 后`, observation: o.text });
+    return {
+      ok: true,
+      summary:
+        action === "select_columns"
+          ? "已打开列选择面板（用 list_view_toggle_column 显隐列）"
+          : `已执行列表视图菜单动作 ${action}`,
+      data: { action, url: o.url, confirmed: true, ...extra },
+      trace,
+    };
+  },
+});
+
+registry.register({
+  name: "list_view_toggle_column",
+  layer: "A",
+  description:
+    "在列表视图显示/隐藏某列（如 Name/Labels/List/Due Date/Tasks/Notifications 等）。驱动真实 UI：打开列选择面板 → 切换该列复选框(原生 input checkbox)。幂等：可指定 visible=on/off，已满足则跳过。trace 回报切换前后 checked + 列头可见性。",
+  params: z.object({
+    column: z.string().min(1).describe("列名（与列头 headerTitle 一致，如 Name/Labels/List/Due Date/Tasks/Notifications）"),
+    visible: z.enum(["on", "off"]).optional().describe("目标显隐：on=显示；off=隐藏；不填则翻转一次"),
+  }),
+  run: async ({ column, visible }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+    const switched = await ensureListView(page);
+    if (switched) trace.push({ label: "已切换到列表视图" });
+
+    // 开列选择面板：点 Ellipsis → Select Columns
+    const ellipsis = page.getByTitle(/edit list view|编辑列表视图/i).first();
+    await ellipsis.click({ timeout: 10_000 }).catch(() => {});
+    await page.waitForTimeout(500);
+    await page.getByRole("button", { name: /select columns|选择列/i }).first().click({ timeout: 8_000 }).catch(() => {});
+    await page.waitForTimeout(500);
+    trace.push({ label: "已打开列选择面板" });
+
+    // 定位该列的 checkbox：Checkbox 组件根 title=Toggle <column>，内部 input[type=checkbox]
+    const toggle = page.getByTitle(new RegExp(`toggle ${column}|切换.*${column}`, "i")).first();
+    if ((await toggle.count().catch(() => 0)) === 0) {
+      await page.keyboard.press("Escape").catch(() => {});
+      return { ok: false, summary: `列选择面板未找到列 "${column}" 的切换项`, trace };
+    }
+    const cb = toggle.locator('input[type="checkbox"]').first();
+    const before = await cb.isChecked().catch(() => null);
+    const wantChecked = visible === "on" ? true : visible === "off" ? false : before === null ? true : !before;
+    trace.push({ label: `读 "${column}" checked=${before}（目标=${wantChecked}）` });
+
+    if (before === wantChecked) {
+      await page.keyboard.press("Escape").catch(() => {});
+      const headerVisible = await page.getByRole("columnheader", { name: new RegExp(`^${column}$`, "i") }).first().isVisible().catch(() => false);
+      trace.push({ label: `已处于目标状态（幂等）；列头可见=${headerVisible}` });
+      return {
+        ok: true,
+        summary: `"${column}" 列已 ${wantChecked ? "显示" : "隐藏"}，无需切换`,
+        data: { column, before, after: before, want: wantChecked, confirmed: true, headerVisible },
+        trace,
+      };
+    }
+
+    // setChecked 语义操作触发 onChange；失败回退 click
+    await cb.setChecked(wantChecked).catch(() => cb.click({ timeout: 8_000 }).catch(() => {}));
+    await page.waitForTimeout(600); // toggleVisibility → useEffect → onUserPrefsUpdate
+    const after = await cb.isChecked().catch(() => null);
+    await page.keyboard.press("Escape").catch(() => {}); // 关列选择子面板
+    const headerVisible = await page
+      .getByRole("columnheader", { name: new RegExp(`^${column}$`, "i") })
+      .first()
+      .isVisible()
+      .catch(() => false);
+    trace.push({ label: `切换后 checked=${after}；列头可见=${headerVisible}` });
+    const o = await ctx.session.observe();
+    trace.push({ label: "最终观察", observation: o.text });
+    const ok = after === wantChecked || headerVisible === wantChecked;
+    return {
+      ok,
+      summary: ok
+        ? `"${column}" 列 checked ${before}→${after}（${wantChecked ? "显示" : "隐藏"}）`
+        : `"${column}" 列切换后 checked=${after}（期望 ${wantChecked}），请观察确认`,
+      data: { column, before, after, want: wantChecked, confirmed: ok, headerVisible },
+      trace,
+    };
+  },
+});
+
+registry.register({
+  name: "list_view_sort",
+  layer: "A",
+  description:
+    "在列表视图按某列排序（升/降序）。驱动真实 UI：点列头切换排序。列排序是三态（未排序→asc/desc→移除，且不同列首次方向不同：Name/Labels/Due Date 默认升序优先，Notifications/Tasks/Timer 等降序优先），工具按目标 direction 循环点击到目标态（读 sortingIconRotated 判方向）。多列排序(shift+click)本工具不覆盖。trace 回报排序前后状态与点击次数。",
+  params: z.object({
+    column: z.string().min(1).describe("要排序的列名（列头 headerTitle，如 Name/Labels/Due Date/Tasks 等）"),
+    direction: z.enum(["asc", "desc"]).optional().describe("目标方向：asc=升序；desc=降序；不填则点一次（按列首方向）"),
+  }),
+  run: async ({ column, direction }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+    const switched = await ensureListView(page);
+    if (switched) trace.push({ label: "已切换到列表视图" });
+
+    // 精确匹配列名，避免 "Date" 命中 "Due Date"；回退 th[title]
+    let header = page.getByRole("columnheader", { name: new RegExp(`^${column}$`, "i") }).first();
+    if ((await header.count().catch(() => 0)) === 0) {
+      header = page.locator(`th[title="${column}"]`).first();
+      if ((await header.count().catch(() => 0)) === 0) {
+        return { ok: false, summary: `列表视图未找到列头 "${column}"`, trace };
+      }
+    }
+
+    // 读排序态：无 sortingIndicator=未排序；有 sortingIconRotated=降序，否则升序
+    const readState = async (): Promise<"asc" | "desc" | null> => {
+      const ind = header.locator('[class*="sortingIndicator"]').first();
+      if ((await ind.count().catch(() => 0)) === 0) return null;
+      const rotated = await ind.locator('[class*="sortingIconRotated"]').count().catch(() => 0);
+      return rotated > 0 ? "desc" : "asc";
+    };
+
+    const before = await readState();
+    trace.push({ label: `排序前 ${column}=${before ?? "未排序"}` });
+
+    let cur = before;
+    let clicks = 0;
+    const target = direction ?? null;
+    // 点到目标态（三态循环最多 3 次）；无目标时点 1 次
+    while (clicks < (target ? 3 : 1)) {
+      if (target && cur === target) break;
+      await header.click({ timeout: 8_000 }).catch(() => {});
+      clicks++;
+      await page.waitForTimeout(400);
+      cur = await readState();
+      if (!target) break;
+    }
+    const o = await ctx.session.observe();
+    trace.push({ label: `排序后 ${column}=${cur ?? "未排序"}（点 ${clicks} 次）`, observation: o.text });
+    const confirmed = target ? cur === target : cur !== null;
+    return {
+      ok: confirmed,
+      summary: confirmed
+        ? `已按 ${column} ${cur ?? ""}排序`
+        : `已点击 ${column} 列头 ${clicks} 次（当前=${cur ?? "未排序"}，目标=${target ?? "toggle"}）`,
+      data: { column, before, after: cur, target: target ?? "toggle", clicks, confirmed },
+      trace,
+    };
+  },
+});
