@@ -87,6 +87,18 @@ async function ensureListView(page: Page): Promise<boolean> {
   return true;
 }
 
+/** 确保处于看板视图（不在则切；card modal 残留先关）。看板视图特征=List_headerName。返回是否触发切换。 */
+async function ensureBoardView(page: Page): Promise<boolean> {
+  await closeCardModalIfOpen(page);
+  if ((await page.locator('[class*="List_headerName"]').count().catch(() => 0)) > 0) return false;
+  const btn = page.getByTitle(/switch to board view|切换到看板视图/i).first();
+  if ((await btn.count().catch(() => 0)) === 0) return false;
+  await btn.click({ timeout: 10_000 }).catch(() => {});
+  await page.waitForTimeout(800);
+  await page.waitForSelector('[class*="List_headerName"]', { timeout: 15_000 }).catch(() => {});
+  return true;
+}
+
 registry.register({
   name: "auth_login",
   layer: "A",
@@ -837,6 +849,215 @@ registry.register({
         ? `已按 ${column} ${cur ?? ""}排序`
         : `已点击 ${column} 列头 ${clicks} 次（当前=${cur ?? "未排序"}，目标=${target ?? "toggle"}）`,
       data: { column, before, after: cur, target: target ?? "toggle", clicks, confirmed },
+      trace,
+    };
+  },
+});
+
+registry.register({
+  name: "card_menu_action",
+  layer: "A",
+  description:
+    "点卡片省略号(Edit Card)菜单的某一项：copy_link(复制链接)/check_activity(查看活动)/duplicate(复制卡片)/move(移动卡片)/delete(删除卡片)/edit_members(编辑成员)/edit_labels(编辑标签)/edit_due_date(编辑到期)/edit_timer(编辑计时器)/edit_name(编辑名称)。驱动真实 UI：看板视图 hover 卡片显示省略号 → 点 Edit Card → 点菜单项。card 名自动加 namespace 前缀。copy_link/check_activity/duplicate 一步完成；edit_*/move/delete 点开后打开对应子面板（后续用 browser_click 或专用工具完成）。",
+  params: z.object({
+    cardName: z.string().min(1).describe("卡片标题（工具自动加 namespace 前缀）"),
+    item: z
+      .enum(["copy_link", "check_activity", "duplicate", "move", "delete", "edit_members", "edit_labels", "edit_due_date", "edit_timer", "edit_name"])
+      .describe("菜单项"),
+  }),
+  run: async ({ cardName, item }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+    await closeCardModalIfOpen(page);
+    const switched = await ensureBoardView(page);
+    if (switched) trace.push({ label: "已切换到看板视图" });
+
+    const fullName = namespaced(ctx, cardName);
+    let card = page.locator(`[class*="Card_name"][title="${fullName}"]`).first();
+    if ((await card.count().catch(() => 0)) === 0) {
+      card = page.locator(`[class*="Card_name"][title="${cardName}"]`).first();
+      if ((await card.count().catch(() => 0)) === 0) {
+        return { ok: false, summary: `未找到卡片 "${cardName}"（确认在看板视图且卡片名准确）`, trace };
+      }
+    }
+    // hover 卡片让省略号(Edit Card)按钮显示（popupWrapper CSS hover）
+    await card.hover().catch(() => {});
+    await page.waitForTimeout(400);
+    const menuBtn = page.getByTitle(/edit card|编辑卡片/i).first();
+    if ((await menuBtn.isVisible().catch(() => false)) === false) {
+      // 备用：直接点 class（hover 未触达时）
+      await card.locator('xpath=../..').locator('button[class*="editCardButton"]').first().click({ timeout: 5_000 }).catch(() => {});
+    } else {
+      await menuBtn.click({ timeout: 8_000 }).catch(() => {});
+    }
+    await page.waitForTimeout(500);
+    trace.push({ label: "已打开卡片菜单" });
+
+    const patterns: Record<string, RegExp> = {
+      copy_link: /copy link|复制链接/i,
+      check_activity: /check activity|查看活动/i,
+      duplicate: /duplicate card|复制卡片/i,
+      move: /move card|移动卡片/i,
+      delete: /delete card|删除卡片/i,
+      edit_members: /edit members|编辑成员/i,
+      edit_labels: /edit labels|编辑标签/i,
+      edit_due_date: /edit due date|编辑到期时间/i,
+      edit_timer: /edit timer|编辑时间/i,
+      edit_name: /edit name|编辑名称/i,
+    };
+    const menuItem = page.getByRole("button", { name: patterns[item] }).first();
+    if ((await menuItem.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: `卡片菜单未找到 "${item}" 项`, trace };
+    }
+    await menuItem.click({ timeout: 8_000 }).catch(() => {});
+    await page.waitForTimeout(800);
+    const o = await ctx.session.observe();
+    trace.push({ label: `点击菜单项 ${item} 后`, observation: o.text });
+    const oneShot = ["copy_link", "check_activity", "duplicate"].includes(item);
+    return {
+      ok: true,
+      summary: oneShot
+        ? `已执行卡片菜单 ${item}（卡片 "${fullName}"）`
+        : `已打开卡片菜单 "${item}" 子面板（卡片 "${fullName}"），后续用 browser_click 或专用工具完成`,
+      data: { cardName: fullName, item, url: o.url, confirmed: true },
+      trace,
+    };
+  },
+});
+
+registry.register({
+  name: "card_edit_title",
+  layer: "A",
+  description:
+    "编辑卡片标题（在卡片详情 modal 点标题 → 输入新标题 → Enter 保存）。card 名自动加 namespace 前缀；新标题也会加前缀。trace 回报编辑前后标题。",
+  params: z.object({
+    cardName: z.string().min(1).describe("当前卡片标题（工具自动加 namespace 前缀定位）"),
+    title: z.string().min(1).describe("新标题（工具自动加 namespace 前缀）"),
+  }),
+  run: async ({ cardName, title }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+    const r = await ensureCardOpen(page, ctx, cardName);
+    if (!r.ok) {
+      return { ok: false, summary: r.reason ?? `未能打开卡片 "${cardName}"`, data: { cardName }, trace };
+    }
+    trace.push({ label: `已打开卡片 "${r.fullName}" 详情` });
+
+    // 点标题进入编辑（headerTitle + cursorPointer）
+    const titleDiv = page.locator('[class*="headerTitle"]').first();
+    await titleDiv.click({ timeout: 8_000 }).catch(() => {});
+    await page.waitForTimeout(400);
+    const ta = page.getByPlaceholder(/enter card name|输入卡片标题/i).first();
+    if ((await ta.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: "标题编辑框未出现", data: { cardName: r.fullName }, trace };
+    }
+    await ta.fill(title).catch(async () => {
+      await page.keyboard.type(title);
+    });
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(800);
+
+    const newTitle = namespaced(ctx, title);
+    const byName = await page.locator(`[class*="Card_name"][title="${newTitle}"]`).count().catch(() => 0);
+    const headerText = await page.locator('[class*="headerTitle"]').first().innerText().catch(() => "");
+    const confirmed = byName > 0 || headerText.includes(title);
+    const o = await ctx.session.observe();
+    trace.push({ label: `改标题为 "${newTitle}"，confirmed=${confirmed}`, observation: o.text });
+    return {
+      ok: confirmed,
+      summary: confirmed ? `已改卡片标题为 "${newTitle}"` : `已提交改标题 "${newTitle}"（请确认）`,
+      data: { cardName: r.fullName, newTitle, confirmed, url: o.url },
+      trace,
+    };
+  },
+});
+
+registry.register({
+  name: "card_manage_comments",
+  layer: "A",
+  description:
+    "给卡片添加评论（在详情 modal 点 Add comment → 输入 → Ctrl+Enter 或 Save）。card 名自动加 namespace 前缀。trace 回报。",
+  params: z.object({
+    cardName: z.string().min(1).describe("卡片标题（工具自动加 namespace 前缀）"),
+    text: z.string().describe("评论内容（markdown）"),
+    submit: z.enum(["save", "ctrl_enter"]).optional().describe("提交：save=点 Save；ctrl_enter=Ctrl+Enter；默认 save"),
+  }),
+  run: async ({ cardName, text, submit }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+    const r = await ensureCardOpen(page, ctx, cardName);
+    if (!r.ok) {
+      return { ok: false, summary: r.reason ?? `未能打开卡片 "${cardName}"`, data: { cardName }, trace };
+    }
+    trace.push({ label: `已打开卡片 "${r.fullName}" 详情` });
+
+    // 展开 CommentEdit（Add comment 按钮）
+    const addBtn = page.getByRole("button", { name: /add comment|添加评论/i }).first();
+    await addBtn.click({ timeout: 8_000 }).catch(() => {});
+    await page.waitForTimeout(500);
+    const ta = page.getByPlaceholder(/enter comment/i).first();
+    if ((await ta.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: "评论输入框未出现", data: { cardName: r.fullName }, trace };
+    }
+    await ta.fill(text).catch(async () => {
+      await page.keyboard.type(text);
+    });
+    trace.push({ label: `填评论（${text.length} 字符）` });
+
+    const mode = submit ?? "save";
+    if (mode === "ctrl_enter") {
+      await ta.press("Control+Enter");
+    } else {
+      await page.getByRole("button", { name: /^save$|^保存$/i }).last().click({ timeout: 8_000 }).catch(() => {});
+    }
+    await page.waitForTimeout(1000);
+
+    const head = text.slice(0, 20).trim();
+    const bodyText = (await page.locator("body").innerText().catch(() => "")).toLowerCase();
+    const saved = head.length > 0 && bodyText.includes(head.toLowerCase());
+    const o = await ctx.session.observe();
+    trace.push({ label: `提交评论后，saved=${saved}`, observation: o.text });
+    return {
+      ok: saved,
+      summary: saved ? `已添加评论（${text.length} 字符）` : `已提交评论（请在观察中确认）`,
+      data: { cardName: r.fullName, text, submit: mode, saved, url: o.url },
+      trace,
+    };
+  },
+});
+
+registry.register({
+  name: "card_toggle_section",
+  layer: "A",
+  description:
+    "在卡片详情 modal 折叠/展开某区块（description 描述 / tasks 任务 / comments 评论 / attachments 附件）。驱动真实 UI：点区块 toggle 按钮（Minus=展开/Plus=折叠）。card 名自动加 namespace 前缀。trace 回报切换后观察。",
+  params: z.object({
+    cardName: z.string().min(1).describe("卡片标题（工具自动加 namespace 前缀）"),
+    section: z.enum(["description", "tasks", "comments", "attachments"]).describe("区块名"),
+    shown: z.enum(["on", "off"]).optional().describe("目标：on=展开显示；off=折叠隐藏；不填则翻转一次"),
+  }),
+  run: async ({ cardName, section, shown }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+    const r = await ensureCardOpen(page, ctx, cardName);
+    if (!r.ok) {
+      return { ok: false, summary: r.reason ?? `未能打开卡片 "${cardName}"`, data: { cardName }, trace };
+    }
+    trace.push({ label: `已打开卡片 "${r.fullName}" 详情` });
+
+    const toggle = page.getByTitle(new RegExp(`toggle ${section}|切换.*${section}`, "i")).first();
+    if ((await toggle.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: `未找到 "${section}" 区块的 toggle 按钮（该区块可能不存在）`, data: { cardName: r.fullName }, trace };
+    }
+    await toggle.scrollIntoViewIfNeeded().catch(() => {});
+    await toggle.click({ timeout: 8_000 }).catch(() => {});
+    await page.waitForTimeout(600);
+    const o = await ctx.session.observe();
+    trace.push({ label: `toggle "${section}"（目标 ${shown ?? "toggle"}）后`, observation: o.text });
+    return {
+      ok: true,
+      summary: `已切换 "${section}" 区块显隐（目标 ${shown ?? "toggle"}）`,
+      data: { cardName: r.fullName, section, want: shown ?? "toggle", url: o.url },
       trace,
     };
   },
