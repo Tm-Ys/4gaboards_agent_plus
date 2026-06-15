@@ -11,6 +11,7 @@ import { settings } from "../../config";
 import { loadScenarioSet } from "../../scenarioStore";
 import { parseArgs } from "../../cli";
 import { runScenario } from "../runner/runScenario";
+import { resetAccountLanguage } from "../runner/resetState";
 
 function pickScenario(
   scenarios: { id: string; feature_id: string; tags: string[]; title: string }[],
@@ -54,7 +55,8 @@ async function main(): Promise<number> {
   console.log(`▶ 运行场景：${full.id}（${full.title}）`);
   console.log(`  headless=${headless}, maxSteps=${maxSteps}\n`);
 
-  const result = await runScenario(full, { headless, maxSteps });
+  const cleanup = args.reset === true ? resetAccountLanguage : undefined;
+  const result = await runScenario(full, { headless, maxSteps, cleanup });
 
   // 落盘轨迹
   const runsDir = path.join(settings.outputsDir, "runs");

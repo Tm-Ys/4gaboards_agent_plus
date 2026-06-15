@@ -2,6 +2,7 @@
 // 顺序跑（共享 demo 账号，并行会互相踩数据）。单个场景失败/异常不中断整批。
 
 import { runScenario, type ScenarioRunResult } from "./runScenario";
+import { resetAccountLanguage } from "./resetState";
 import type { TestScenario } from "../../schemas";
 
 export interface BatchOutcome {
@@ -36,6 +37,8 @@ export interface RunBatchOptions {
   setName?: string;
   filter?: Record<string, unknown>;
   onProgress?: (index: number, total: number, o: BatchOutcome) => void;
+  /** 每场景后恢复账号级 state（默认 true）。设 false 可复现无隔离的原批量行为。 */
+  reset?: boolean;
 }
 
 export async function runBatch(scenarios: TestScenario[], opts: RunBatchOptions = {}): Promise<BatchReport> {
@@ -46,7 +49,8 @@ export async function runBatch(scenarios: TestScenario[], opts: RunBatchOptions 
     const sc = scenarios[i]!;
     const o: BatchOutcome = { scenario: sc };
     try {
-      o.result = await runScenario(sc, { maxSteps: opts.maxSteps ?? 20 });
+      const cleanup = opts.reset === false ? undefined : resetAccountLanguage;
+      o.result = await runScenario(sc, { maxSteps: opts.maxSteps ?? 20, cleanup });
     } catch (e) {
       o.error = e instanceof Error ? e.message : String(e);
     }

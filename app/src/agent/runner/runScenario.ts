@@ -24,6 +24,8 @@ export interface ScenarioRunResult extends ReActRunResult {
 export interface RunScenarioOptions {
   headless?: boolean;
   maxSteps?: number;
+  /** 场景执行后、session 关闭前的账号 state 恢复钩子（批量隔离 language 等 server-side 偏好用）。 */
+  cleanup?: (ctx: ToolContext) => Promise<void>;
 }
 
 export async function runScenario(
@@ -33,8 +35,8 @@ export async function runScenario(
   const startedAt = new Date().toISOString();
   const t0 = Date.now();
   const session = await BrowserSession.launch({ headless: opts.headless ?? true });
+  const ctx: ToolContext = { session, page: session.page };
   try {
-    const ctx: ToolContext = { session, page: session.page };
     // 前置：登录（场景.preconditions 默认含"已登录"）
     const login = await registry.execute("auth_login", {}, ctx);
     if (!login.ok) throw new Error(`登录失败：${login.summary}`);
@@ -53,6 +55,15 @@ export async function runScenario(
       verdict,
     };
   } finally {
+    // 批量隔离：场景执行后、关 session 前恢复账号级持久 state（如 language）。
+    // 失败不影响本场景结果（仅记录），避免恢复异常污染通过率统计。
+    if (opts.cleanup) {
+      try {
+        await opts.cleanup(ctx);
+      } catch (e) {
+        console.warn(`[cleanup] 账号 state 恢复失败（不影响场景结果）：${e instanceof Error ? e.message : e}`);
+      }
+    }
     await session.close();
   }
 }
