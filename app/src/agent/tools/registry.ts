@@ -8,6 +8,8 @@ import type { BrowserSession } from "../browser/context";
 export interface ToolContext {
   session: BrowserSession;
   page: Page;
+  /** 批量 runId：资源命名空间前缀（board/card 创建加前缀、清理按前缀删、并发隔离用）。 */
+  namespace?: string;
 }
 
 export interface TraceStep {

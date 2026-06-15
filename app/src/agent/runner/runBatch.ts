@@ -3,6 +3,7 @@
 
 import { runScenario, type ScenarioRunResult } from "./runScenario";
 import { resetAccountLanguage } from "./resetState";
+import { cleanupTestProjects } from "./cleanup";
 import type { TestScenario } from "../../schemas";
 
 export interface BatchOutcome {
@@ -27,6 +28,8 @@ export interface BatchReport {
   startedAt: string;
   setName: string;
   filter: Record<string, unknown>;
+  /** 本批命名空间（资源前缀 + 清理 + 并发隔离用）。 */
+  namespace?: string;
   total: number;
   summary: BatchSummary;
   outcomes: BatchOutcome[];
@@ -39,18 +42,22 @@ export interface RunBatchOptions {
   onProgress?: (index: number, total: number, o: BatchOutcome) => void;
   /** 每场景后恢复账号级 state（默认 true）。设 false 可复现无隔离的原批量行为。 */
   reset?: boolean;
+  /** 批尾删除本批创建的测试 project（默认 true，按命名空间前缀）。 */
+  cleanup?: boolean;
 }
 
 export async function runBatch(scenarios: TestScenario[], opts: RunBatchOptions = {}): Promise<BatchReport> {
   const startedAt = new Date().toISOString();
   const outcomes: BatchOutcome[] = [];
+  // 命名空间：本批资源加前缀、批尾按前缀清理、并发隔离用。
+  const namespace = `p4-${Date.now().toString(36)}`;
 
   for (let i = 0; i < scenarios.length; i++) {
     const sc = scenarios[i]!;
     const o: BatchOutcome = { scenario: sc };
     try {
       const cleanup = opts.reset === false ? undefined : resetAccountLanguage;
-      o.result = await runScenario(sc, { maxSteps: opts.maxSteps ?? 20, cleanup });
+      o.result = await runScenario(sc, { maxSteps: opts.maxSteps ?? 20, cleanup, namespace });
     } catch (e) {
       o.error = e instanceof Error ? e.message : String(e);
     }
@@ -58,10 +65,21 @@ export async function runBatch(scenarios: TestScenario[], opts: RunBatchOptions 
     opts.onProgress?.(i + 1, scenarios.length, o);
   }
 
+  // 批尾清理：删除本批创建的测试 project（级联删 board）。teardown 走 REST，非被测动作。
+  if (opts.cleanup !== false) {
+    try {
+      const c = await cleanupTestProjects({ namespace });
+      if (c.deleted > 0) console.log(`[cleanup] 删除 ${c.deleted} 个测试资源（board/project，namespace=${namespace}）`);
+    } catch (e) {
+      console.warn(`[cleanup] 清理失败（不影响通过率）：${e instanceof Error ? e.message : e}`);
+    }
+  }
+
   return {
     startedAt,
     setName: opts.setName ?? "basic",
     filter: opts.filter ?? {},
+    namespace,
     total: scenarios.length,
     summary: summarize(outcomes),
     outcomes,

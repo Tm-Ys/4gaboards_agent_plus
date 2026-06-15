@@ -58,6 +58,8 @@ registry.register({
   }),
   run: async ({ name, project, template }, ctx) => {
     const trace: TraceStep[] = [];
+    // 批量命名空间：资源加前缀，便于批尾清理与并发隔离（单场景 namespace 为空，行为不变）
+    const fullName = ctx.namespace ? `${ctx.namespace}-${name}` : name;
     // 模态内可搜索下拉的输入框：第 0 个=项目，第 1 个=模板
     const dropdownSearch = ctx.page.locator('[class*="Dropdown_dropdownSearchInput"]');
     const nameInput = ctx.page.getByPlaceholder("Enter board name...", { exact: false });
@@ -70,8 +72,8 @@ registry.register({
     // 记录模态打开后的观察（判官核对段落1"弹窗出现/含输入框、模板、导入"用）
     trace.push({ label: "打开 Add Board 模态", observation: (await ctx.session.observe()).text });
     // 2. 看板名
-    await nameInput.fill(name);
-    trace.push({ label: `填看板名 "${name}"` });
+    await nameInput.fill(fullName);
+    trace.push({ label: `填看板名 "${fullName}"` });
     // 3. 项目：键入搜索（selectFirstOnSearch 自动选中）+ Tab 关闭下拉
     const projInput = dropdownSearch.nth(0);
     await projInput.click({ timeout: 10_000 });
@@ -103,10 +105,10 @@ registry.register({
     await ctx.session.waitForReady();
     let o = await ctx.session.observe();
     trace.push({ label: "提交创建后", observation: o.text });
-    const created = o.elements.some((e) => e.name.includes(name));
+    const created = o.elements.some((e) => e.name.includes(fullName));
     if (created) {
       // 打开新看板，提供"看板视图/预置列表"证据（板视图列表经 socket 加载，需等待）
-      const link = ctx.page.getByRole("link", { name }).first();
+      const link = ctx.page.getByRole("link", { name: fullName }).first();
       await link.click({ timeout: 10_000 }).catch(() => {});
       await ctx.page.waitForLoadState("networkidle", { timeout: 20_000 }).catch(() => {});
       await ctx.page.waitForTimeout(3000);
@@ -116,9 +118,9 @@ registry.register({
     return {
       ok: created,
       summary: created
-        ? `已创建看板 "${name}"（项目 ${project}${template ? `，模板 ${template}` : ""}）`
-        : `已提交创建看板 "${name}"（请在观察中确认）`,
-      data: { name, project, template, url: o.url, confirmed: created },
+        ? `已创建看板 "${fullName}"（项目 ${project}${template ? `，模板 ${template}` : ""}）`
+        : `已提交创建看板 "${fullName}"（请在观察中确认）`,
+      data: { name: fullName, project, template, url: o.url, confirmed: created },
       trace,
     };
   },
@@ -130,7 +132,10 @@ registry.register({
   description: "打开指定名称的看板（在侧边栏点击该看板）。",
   params: z.object({ name: z.string().min(1).describe("要打开的看板名") }),
   run: async ({ name }, ctx) => {
-    const link = ctx.page.getByRole("link", { name }).first();
+    // 优先找命名空间前缀的全名（本批创建的资源），找不到回退原 name（非本批/预存资源）
+    const fullName = ctx.namespace ? `${ctx.namespace}-${name}` : name;
+    let link = ctx.page.getByRole("link", { name: fullName }).first();
+    if ((await link.count().catch(() => 0)) === 0) link = ctx.page.getByRole("link", { name }).first();
     await link.waitFor({ timeout: 10_000 });
     await link.click();
     await ctx.page.waitForLoadState("networkidle", { timeout: 20_000 }).catch(() => {});
@@ -150,6 +155,7 @@ registry.register({
   description: "在当前看板的第一个列表底部创建卡片：点击 + Add Card → 填标题 → Enter。需先处于某个看板视图。",
   params: z.object({ title: z.string().min(1).describe("卡片标题") }),
   run: async ({ title }, ctx) => {
+    const fullTitle = ctx.namespace ? `${ctx.namespace}-${title}` : title;
     const addCard = ctx.page.getByRole("button", { name: /\+\s*add card/i }).first();
     await addCard.waitFor({ timeout: 10_000 });
     await addCard.click();
@@ -157,15 +163,15 @@ registry.register({
     // 卡片标题输入框（一般 placeholder 含 "card" 或为空文本框）
     const titleInput = ctx.page.locator('textarea:visible, input:visible').last();
     await titleInput.waitFor({ timeout: 5_000 });
-    await titleInput.fill(title);
+    await titleInput.fill(fullTitle);
     await ctx.page.keyboard.press("Enter");
     await ctx.page.waitForTimeout(1000);
     const o = await ctx.session.observe();
-    const created = o.elements.some((e) => e.name.includes(title));
+    const created = o.elements.some((e) => e.name.includes(fullTitle));
     return {
       ok: created,
-      summary: created ? `已创建卡片 "${title}"` : `已提交创建卡片 "${title}"（请在观察中确认）`,
-      data: { title, url: o.url, confirmed: created },
+      summary: created ? `已创建卡片 "${fullTitle}"` : `已提交创建卡片 "${fullTitle}"（请在观察中确认）`,
+      data: { title: fullTitle, url: o.url, confirmed: created },
     };
   },
 });

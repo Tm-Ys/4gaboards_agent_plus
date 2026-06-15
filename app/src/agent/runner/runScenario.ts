@@ -26,6 +26,8 @@ export interface RunScenarioOptions {
   maxSteps?: number;
   /** 场景执行后、session 关闭前的账号 state 恢复钩子（批量隔离 language 等 server-side 偏好用）。 */
   cleanup?: (ctx: ToolContext) => Promise<void>;
+  /** 批量命名空间：board/card 创建加前缀，便于批尾清理与并发隔离。 */
+  namespace?: string;
 }
 
 export async function runScenario(
@@ -35,7 +37,7 @@ export async function runScenario(
   const startedAt = new Date().toISOString();
   const t0 = Date.now();
   const session = await BrowserSession.launch({ headless: opts.headless ?? true });
-  const ctx: ToolContext = { session, page: session.page };
+  const ctx: ToolContext = { session, page: session.page, namespace: opts.namespace };
   try {
     // 前置：登录（场景.preconditions 默认含"已登录"）
     const login = await registry.execute("auth_login", {}, ctx);
