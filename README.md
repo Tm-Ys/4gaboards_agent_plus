@@ -187,16 +187,18 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 - [x] 初始化本项目 git 仓库并关联远程：<https://github.com/Tm-Ys/4gaboards_agent_plus.git>
 - [x] 任务一：功能点提取 + 结构化测试场景生成（长上下文直填；Python 原型 `scenario_generator/` + TS 移植 `app/`）。
 - [ ] 任务一：功能点 / 测试场景的可视化展示（TS + Node）—— 暂缓。
-- [~] 任务二：ReAct 智能体（规划/记忆/执行/验证）对 `demo.4gaboards.com` 执行测试。**P0–P3 + P1.5 + P4 已完成**：基线 43% → settings 簇 68% → **P4 健壮性**（state 隔离 / 命名空间清理 / 拖拽 `card_drag`）+ **领域工具扩展**（A 层 8→18 工具：card_open / view_switch / card_edit_description / list_view×3 / card_menu_action / card_edit_title / card_manage_comments / card_toggle_section）。三簇验证：view 3/4、list-view 4/6、card 10/21。下一步 P5 变异 + 前端。
+- [~] 任务二：ReAct 智能体（规划/记忆/执行/验证）对 `demo.4gaboards.com` 执行测试。**P0–P3 + P1.5 + P4 + 领域工具扩展 + card 工具补全已完成**：基线 43% → settings 簇 68% → **P4 健壮性**（state 隔离 / 命名空间清理 / 拖拽 `card_drag`）+ **领域工具扩展**（A 层 8→18 工具）+ **card 工具补全**（A 层 18→**20**：`card_manage_labels` toggle/create/edit、`card_text_editor` switch_mode/resize/help）。card 补全五场景 **3/5**（switch-modes / resize / manage-labels-2 PASS）。下一步 P5 变异 + 前端。
 - [ ] 任务二（提升档）：场景变异与典型应用错误识别。
 
 ---
 
 ## 八、任务二实现方案
 
-> **实现状态（2026-06）**：P0–P3 + P1.5 + **P4 + 领域工具扩展已完成**。Agent（Playwright + 两层工具 + function-calling）、
+> **实现状态（2026-06）**：P0–P3 + P1.5 + **P4 + 领域工具扩展 + card 工具补全已完成**。Agent（Playwright + 两层工具 + function-calling）、
 > 独立 LLM 判官、批量 harness、健壮性地基（state 隔离 / 命名空间清理 / 拖拽）全部就绪。基线 43% → settings 簇 **84%**。
-> **P4 + 工具扩展**：A 层 8→**18 工具**——card/view 前置+编辑（`card_open` / `view_switch` / `card_edit_description`）、list 簇列操作（`list_view_menu_action` / `toggle_column` / `sort`）、card 详情（`card_menu_action` / `edit_title` / `manage_comments` / `toggle_section`）；CLI `--feature` 前缀匹配。三簇验证：view **3/4**、list-view **4/6**、card **10/21**（含网络异常）。下一步 P5 变异 + 前端。
+> **P4 + 工具扩展**：A 层 8→**18 工具**——card/view 前置+编辑（`card_open` / `view_switch` / `card_edit_description`）、list 簇列操作（`list_view_menu_action` / `toggle_column` / `sort`）、card 详情（`card_menu_action` / `edit_title` / `manage_comments` / `toggle_section`）。
+> **card 工具补全**：A 层 18→**20 工具**——`card_manage_labels`（toggle/create/edit；4gaBoards 标签是彩色按钮，选中=nameActive 类，状态经 socket 往返需轮询）+ `card_text_editor`（switch_mode 点工具栏模式按钮 / resize 拖 `.w-md-editor-bar` / help）。五场景验证 **3/5 PASS**（switch-modes / resize / manage-labels-2）。
+> 下一步 P5 变异 + 前端。
 > 运行：`cd app && npm run run-scenario -- --id <id>` / `npm run run-batch -- --feature card --difficulty easy`。
 
 任务二 = **ReAct 智能体**消费任务一的 `TestScenario`，在 `demo.4gaboards.com` 端到端执行，
@@ -214,7 +216,7 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 
 **四要素**：规划（场景 `phases` 作计划骨架）/ 记忆（短期轨迹 + scratchpad）/ 执行（Playwright 工具执行器）/ 验证（两层 LLM judge：步骤检查点 + 场景终判）。
 
-**路线**：✅ P0 浏览器地基 + 工具框架 → ✅ P1 跑通 happy_path → ✅ P1.5 设置簇工具（settings 84%）→ ✅ P2 judge → ✅ P3 批量 harness + 通过率报告 → ✅ P4 健壮性（state 隔离 / 拖拽 / 清理）+ 领域工具扩展（A 层 18 工具）→ ⬜ P5 变异测试（提升档）→ 前端。
+**路线**：✅ P0 浏览器地基 + 工具框架 → ✅ P1 跑通 happy_path → ✅ P1.5 设置簇工具（settings 84%）→ ✅ P2 judge → ✅ P3 批量 harness + 通过率报告 → ✅ P4 健壮性（state 隔离 / 拖拽 / 清理）+ 领域工具扩展（A 层 8→18 工具）→ ✅ card 工具补全（A 层 18→20 工具，5 场景 3/5）→ ⬜ P5 变异测试（提升档）→ 前端。
 
 > 完整设计（两层工具架构、目录设想、已知难点、底线细则）见 [CLAUDE.md](CLAUDE.md)「任务二实现方案」。
 

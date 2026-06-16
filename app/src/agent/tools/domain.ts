@@ -99,6 +99,50 @@ async function ensureBoardView(page: Page): Promise<boolean> {
   return true;
 }
 
+/**
+ * 进卡片描述编辑态：点 Edit/Add Description 入口 → 等 @uiw/react-md-editor textarea。
+ * card_edit_description 与 card_text_editor 共用。返回 textarea locator 与失败原因。
+ */
+async function enterDescriptionEdit(
+  page: Page,
+): Promise<{ ok: boolean; textarea: Locator | null; reason?: string }> {
+  let entry = page.getByTitle(/edit description|编辑描述/i).first();
+  if ((await entry.count().catch(() => 0)) === 0) {
+    entry = page.getByTitle(/add description|添加描述/i).first();
+  }
+  if ((await entry.count().catch(() => 0)) === 0) {
+    return { ok: false, textarea: null, reason: "卡片详情里未找到描述编辑入口" };
+  }
+  await entry.scrollIntoViewIfNeeded().catch(() => {});
+  await entry.click({ timeout: 10_000 }).catch(() => {});
+  await page.waitForSelector(".w-md-editor-text-input", { timeout: 8_000 }).catch(() => {});
+  const ta = page.locator(".w-md-editor-text-input").first();
+  if ((await ta.count().catch(() => 0)) === 0) {
+    return { ok: false, textarea: null, reason: "描述编辑器 textarea 未出现" };
+  }
+  return { ok: true, textarea: ta };
+}
+
+/**
+ * 读 @uiw md-editor 当前显示模式。模式由根节点 class 指示（recon 实测）：
+ * w-md-editor-show-edit / w-md-editor-show-live / w-md-editor-show-preview；
+ * 全屏：根节点或 body 带 fullscreen 类，兜底用编辑器高度≈视口。
+ */
+async function readEditorMode(
+  page: Page,
+): Promise<{ mode: "edit" | "live" | "preview" | null; edit: boolean; preview: boolean; fullscreen: boolean }> {
+  const cls = (await page.locator(".w-md-editor").first().getAttribute("class").catch(() => "")) ?? "";
+  const edit = /\bw-md-editor-show-edit\b/.test(cls);
+  const live = /\bw-md-editor-show-live\b/.test(cls);
+  const preview = /\bw-md-editor-show-preview\b/.test(cls);
+  const mode = edit ? "edit" : live ? "live" : preview ? "preview" : null;
+  const fsClass = /fullscreen/i.test(cls) || (await page.locator("[class*='fullscreen']").count().catch(() => 0)) > 0;
+  const editorBox = await page.locator(".w-md-editor").first().boundingBox().catch(() => null);
+  const viewportH = page.viewportSize()?.height ?? 0;
+  const fullscreen = fsClass || (!!editorBox && viewportH > 0 && editorBox.height >= viewportH * 0.85);
+  return { mode, edit: edit || live, preview: preview || live, fullscreen };
+}
+
 registry.register({
   name: "auth_login",
   layer: "A",
@@ -603,24 +647,13 @@ registry.register({
     }
     trace.push({ label: `已打开卡片 "${r.fullName}" 详情` });
 
-    // 2. 进描述编辑态：先试已有描述（Edit Description），再试空描述（Add Description）
-    let entry = page.getByTitle(/edit description|编辑描述/i).first();
-    if ((await entry.count().catch(() => 0)) === 0) {
-      entry = page.getByTitle(/add description|添加描述/i).first();
+    // 2. 进描述编辑态（enterDescriptionEdit：Edit/Add Description 入口 → 等 md-editor textarea）
+    const ed = await enterDescriptionEdit(page);
+    if (!ed.ok || !ed.textarea) {
+      return { ok: false, summary: ed.reason ?? `卡片 "${r.fullName}" 详情里未找到描述编辑入口`, data: { cardName: r.fullName }, trace };
     }
-    if ((await entry.count().catch(() => 0)) === 0) {
-      return { ok: false, summary: `卡片 "${r.fullName}" 详情里未找到描述编辑入口`, data: { cardName: r.fullName }, trace };
-    }
-    await entry.scrollIntoViewIfNeeded().catch(() => {});
-    await entry.click({ timeout: 10_000 }).catch(() => {});
+    const ta = ed.textarea;
     trace.push({ label: "点击描述编辑入口" });
-
-    // 3. 等 textarea（@uiw/md-editor 渲染，稳定 class）
-    await page.waitForSelector(".w-md-editor-text-input", { timeout: 8_000 }).catch(() => {});
-    const ta = page.locator(".w-md-editor-text-input").first();
-    if ((await ta.count().catch(() => 0)) === 0) {
-      return { ok: false, summary: "描述编辑器 textarea 未出现", data: { cardName: r.fullName }, trace };
-    }
 
     // 4. 填文本（fill 自动清空；@uiw/md-editor 的 fill 偶不触发 onChange，失败回退 keyboard.type）
     await ta.click({ timeout: 5_000 }).catch(() => {});
@@ -1058,6 +1091,365 @@ registry.register({
       ok: true,
       summary: `已切换 "${section}" 区块显隐（目标 ${shown ?? "toggle"}）`,
       data: { cardName: r.fullName, section, want: shown ?? "toggle", url: o.url },
+      trace,
+    };
+  },
+});
+
+// ── 标签管理 ────────────────────────────────────────────────────────────
+// 4gaBoards 标签是「彩色按钮」（选中=nameActive 高亮），并非 checkbox。
+// 弹层入口两处：卡片详情 Labels 区的 Add label 加号 / 卡片 hover 省略号 → Add/remove labels。
+// 新建/重命名表单（LabelsStep/AddStep/EditStep）：名输入框(placeholder enterLabelName)、预设色按钮(title=hex,name=color)、Enter 提交。
+
+registry.register({
+  name: "card_manage_labels",
+  layer: "A",
+  description:
+    "管理卡片标签（4gaBoards 标签是彩色按钮，选中=高亮 nameActive 态，非 checkbox）。三种动作：" +
+    "toggle=勾选/取消一个已有标签（按 labelName 匹配，on 控制方向）；" +
+    "create=新建标签（labelName 为名，可选 color 十六进制如 #ff1744，默认取预设第一色）；" +
+    "edit=重命名已有标签（labelName=原名，newLabelName=新名）。" +
+    "entry=modal（默认，卡片详情点 Labels 区的 Add label 加号）或 menu（hover 卡片省略号 → Add/remove labels）。" +
+    "驱动真实 UI，card 名自动加 namespace 前缀。trace 回报弹层与结果观察。",
+  params: z.object({
+    cardName: z.string().min(1).describe("卡片标题（工具自动加 namespace 前缀）"),
+    action: z.enum(["toggle", "create", "edit"]).describe("toggle=勾选/取消已有标签；create=新建标签；edit=重命名"),
+    entry: z.enum(["modal", "menu"]).optional().describe("打开标签弹层入口：modal=卡片详情 Add label 加号（默认）；menu=hover 省略号→Add/remove labels"),
+    labelName: z.string().optional().describe("toggle/edit=要匹配的已有标签名；create=新标签名"),
+    newLabelName: z.string().optional().describe("edit 专用：重命名后的新名称"),
+    color: z.string().optional().describe("create 专用：标签颜色十六进制（如 #ff1744）；不填取预设第一色"),
+    on: z.enum(["on", "off"]).optional().describe("toggle 专用：on=选中；off=取消；不填则翻转一次"),
+  }),
+  run: async ({ cardName, action, entry, labelName, newLabelName, color, on }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+
+    // 1. 打开卡片详情（modal 入口需 modal 开着；menu 入口随后会关 modal 回看板视图 hover）
+    const r = await ensureCardOpen(page, ctx, cardName);
+    if (!r.ok) {
+      return { ok: false, summary: r.reason ?? `未能打开卡片 "${cardName}"`, data: { cardName }, trace };
+    }
+    trace.push({ label: `已打开卡片 "${r.fullName}" 详情` });
+
+    // 2. 打开标签弹层
+    const ent = entry ?? "modal";
+    if (ent === "menu") {
+      await closeCardModalIfOpen(page);
+      const switched = await ensureBoardView(page);
+      if (switched) trace.push({ label: "已切换到看板视图" });
+      const card = page.locator(`[class*="Card_name"][title="${r.fullName}"]`).first();
+      await card.hover().catch(() => {});
+      await page.waitForTimeout(400);
+      await page.getByTitle(/edit card|编辑卡片/i).first().click({ timeout: 8_000 }).catch(() => {});
+      await page.waitForTimeout(500);
+      const item = page
+        .getByRole("button", { name: /add\/remove labels|添加\/移除标签|edit labels|编辑标签/i })
+        .first();
+      if ((await item.count().catch(() => 0)) === 0) {
+        return { ok: false, summary: `卡片菜单未找到 Add/remove labels 项`, data: { cardName: r.fullName }, trace };
+      }
+      await item.click({ timeout: 8_000 }).catch(() => {});
+    } else {
+      const addBtn = page.getByTitle(/add label|添加标签/i).first();
+      if ((await addBtn.count().catch(() => 0)) === 0) {
+        return { ok: false, summary: `卡片详情未找到 Labels 区的 Add label 入口`, data: { cardName: r.fullName }, trace };
+      }
+      await addBtn.scrollIntoViewIfNeeded().catch(() => {});
+      await addBtn.click({ timeout: 8_000 }).catch(() => {});
+    }
+    await page.waitForTimeout(600);
+    // 弹层渲染：等搜索框（list 态可见）
+    await page
+      .waitForSelector('input[placeholder*="label" i], input[placeholder*="标签"]', { timeout: 8_000 })
+      .catch(() => {});
+    trace.push({ label: `已打开标签弹层（entry=${ent}）` });
+
+    // 在搜索框输入标签名以精确定位（LabelsStep 按名称子串过滤；占位符实测 "Search labels or create one..."）
+    const searchInput = page.getByPlaceholder(/search labels|搜索标签|标签/i).first();
+    const fillSearch = async (text: string) => {
+      const box = (await searchInput.count().catch(() => 0)) > 0 ? searchInput : page.locator('input[placeholder*="label" i], input[placeholder*="标签"]').first();
+      await box.fill(text).catch(async () => {
+        await box.click().catch(() => {});
+        await page.keyboard.type(text);
+      });
+      await page.waitForTimeout(300);
+    };
+
+    if (action === "create") {
+      const name = (labelName ?? "").trim();
+      if (!name) return { ok: false, summary: "create 需要 labelName", data: { cardName: r.fullName }, trace };
+      const createBtn = page.getByTitle(/create new label|创建新标签/i).first();
+      if ((await createBtn.count().catch(() => 0)) === 0) {
+        return { ok: false, summary: "标签弹层未找到 Create new label 按钮", data: { cardName: r.fullName }, trace };
+      }
+      await createBtn.click({ timeout: 8_000 }).catch(() => {});
+      await page.waitForTimeout(500);
+      const nameInput = page.getByPlaceholder(/enter label name|输入标签名称/i).first();
+      if ((await nameInput.count().catch(() => 0)) === 0) {
+        return { ok: false, summary: "新建标签名输入框未出现", data: { cardName: r.fullName }, trace };
+      }
+      await nameInput.fill(name).catch(async () => {
+        await page.keyboard.type(name);
+      });
+      if (color) {
+        await page
+          .locator(`button[name="color"][title="${color.toLowerCase()}"]`)
+          .first()
+          .click({ timeout: 5_000 })
+          .catch(() => {});
+      }
+      await nameInput.press("Enter").catch(async () => {
+        await page.getByRole("button", { name: /^create label$|^创建标签$/i }).last().click({ timeout: 8_000 }).catch(() => {});
+      });
+      await page.waitForTimeout(900);
+      // 确认：新建后返回标签列表，标签作为彩色按钮（title=name）出现
+      const created =
+        (await page.locator(`button[title="${name}"]`).count().catch(() => 0)) > 0 ||
+        (await page.getByRole("button", { name, exact: true }).count().catch(() => 0)) > 0;
+      const o = await ctx.session.observe();
+      trace.push({ label: `新建标签 "${name}" 后，created=${created}`, observation: o.text });
+      return {
+        ok: created,
+        summary: created ? `已新建标签 "${name}"` : `已提交新建标签 "${name}"（请观察确认）`,
+        data: { cardName: r.fullName, action, labelName: name, color, created, url: o.url },
+        trace,
+      };
+    }
+
+    if (action === "edit") {
+      const cur = (labelName ?? "").trim();
+      const next = (newLabelName ?? "").trim();
+      if (!cur || !next) {
+        return { ok: false, summary: "edit 需要 labelName(原名) 与 newLabelName(新名)", data: { cardName: r.fullName }, trace };
+      }
+      await fillSearch(cur);
+      // 标签项=彩色按钮，title=标签名（recon 实测）；按 title 定位最稳，role name 兜底
+      let nameLabel = page.locator(`button[title="${cur}"]`).first();
+      if ((await nameLabel.count().catch(() => 0)) === 0) {
+        nameLabel = page.getByRole("button", { name: cur, exact: true }).first();
+      }
+      if ((await nameLabel.count().catch(() => 0)) === 0) {
+        return { ok: false, summary: `弹层未找到标签 "${cur}"`, data: { cardName: r.fullName }, trace };
+      }
+      // 同行铅笔（title editLabel）；过滤后弹层通常只剩该标签，直接按 title 取
+      const pencil = page.getByTitle(/edit label|编辑标签/i).first();
+      if ((await pencil.count().catch(() => 0)) === 0) {
+        return { ok: false, summary: `标签 "${cur}" 未找到编辑铅笔`, data: { cardName: r.fullName }, trace };
+      }
+      await pencil.click({ timeout: 8_000 }).catch(() => {});
+      await page.waitForTimeout(500);
+      const nameInput = page.getByPlaceholder(/enter label name|输入标签名称/i).first();
+      if ((await nameInput.count().catch(() => 0)) === 0) {
+        return { ok: false, summary: "重命名输入框未出现", data: { cardName: r.fullName }, trace };
+      }
+      await nameInput.fill(next).catch(async () => {
+        await page.keyboard.type(next);
+      });
+      await nameInput.press("Enter").catch(async () => {
+        await page.getByRole("button", { name: /^update label$|^更新标签$|^save$/i }).last().click({ timeout: 8_000 }).catch(() => {});
+      });
+      await page.waitForTimeout(800);
+      // 确认：重命名后新名标签按钮（title=新名）出现，旧名消失
+      const renamed =
+        (await page.locator(`button[title="${next}"]`).count().catch(() => 0)) > 0 ||
+        (await page.getByRole("button", { name: next, exact: true }).count().catch(() => 0)) > 0;
+      const o = await ctx.session.observe();
+      trace.push({ label: `重命名 "${cur}"→"${next}" 后，renamed=${renamed}`, observation: o.text });
+      return {
+        ok: renamed,
+        summary: renamed ? `已重命名标签 "${cur}"→"${next}"` : `已提交重命名（请观察确认）`,
+        data: { cardName: r.fullName, action, labelName: cur, newLabelName: next, renamed, url: o.url },
+        trace,
+      };
+    }
+
+    // action === "toggle"
+    const target = (labelName ?? "").trim();
+    if (!target) return { ok: false, summary: "toggle 需要 labelName", data: { cardName: r.fullName }, trace };
+    await fillSearch(target);
+    let nameLabel = page.locator(`button[title="${target}"]`).first();
+    if ((await nameLabel.count().catch(() => 0)) === 0) {
+      nameLabel = page.getByRole("button", { name: target, exact: true }).first();
+    }
+    if ((await nameLabel.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: `弹层未找到标签 "${target}"`, data: { cardName: r.fullName }, trace };
+    }
+    const classBefore = (await nameLabel.getAttribute("class").catch(() => "")) ?? "";
+    const wasActive = /nameActive|active/i.test(classBefore);
+    await nameLabel.click({ timeout: 8_000 }).catch(() => {});
+    // 标签选中态经 socket 往返更新（弱网下慢），轮询最多 ~4s 等 class 变化
+    const readActive = async (): Promise<boolean> => {
+      const loc = page.locator(`button[title="${target}"]`).first();
+      const cls = (await loc.getAttribute("class").catch(() => "")) ?? "";
+      return /nameActive|active/i.test(cls);
+    };
+    let nowActive = wasActive;
+    for (let i = 0; i < 10; i++) {
+      await page.waitForTimeout(450);
+      nowActive = await readActive();
+      if (nowActive !== wasActive) break; // 已变化
+    }
+    const o = await ctx.session.observe();
+    trace.push({ label: `toggle "${target}"：${wasActive}→${nowActive}`, observation: o.text });
+    let ok = nowActive !== wasActive;
+    if (on === "on") ok = nowActive;
+    else if (on === "off") ok = !nowActive;
+    return {
+      ok,
+      summary: `已切换标签 "${target}" 选中态（${wasActive}→${nowActive}，目标 ${on ?? "toggle"}）`,
+      data: { cardName: r.fullName, action, labelName: target, on: on ?? "toggle", wasActive, nowActive, url: o.url },
+      trace,
+    };
+  },
+});
+
+// ── 描述 Markdown 编辑器（@uiw/react-md-editor@4）──────────────────────
+// recon 实测：① 模式由根节点 class 指示 w-md-editor-show-edit/live/preview；全屏根/body 带 fullscreen 类。
+// ② Ctrl+7/8/9/0 在本版本未绑定（工具栏只有 Ctrl+1~6 标题）→ 改用工具栏右侧模式按钮（extraCommands，title 含 edit/live/preview/full）切换。
+// ③ 拖动手柄=.w-md-editor-bar（cursor s-resize，docs 称"右下角三圆点"）；④ 帮助按钮 title="Open help" → markdownguide.org。
+// ⑤ preview 模式下 textarea 不在 DOM，故进编辑态以 .w-md-editor 根为准（不要求 textarea）。
+
+registry.register({
+  name: "card_text_editor",
+  layer: "A",
+  description:
+    "操作卡片描述的 Markdown 编辑器（@uiw/react-md-editor）。需先进描述编辑态（工具自动）。三种动作：" +
+    "switch_mode=切视图模式（mode: edit=仅源码 / live=左源码右预览 / preview=仅预览 / fullscreen=全屏切换；点工具栏右侧模式按钮，读编辑器 class 确认）；" +
+    "resize=拖编辑器底部 .w-md-editor-bar 手柄放大/缩小（direction larger/smaller）；" +
+    "help=点帮助按钮(Open help)打开 Markdown 基本语法页 markdownguide.org。" +
+    "驱动真实 UI，trace 回报模式/高度/popup。card 名自动加 namespace 前缀。",
+  params: z.object({
+    cardName: z.string().min(1).describe("卡片标题（工具自动加 namespace 前缀）"),
+    action: z.enum(["switch_mode", "resize", "help"]).describe("switch_mode=切视图模式；resize=拖手柄改大小；help=打开帮助页"),
+    mode: z.enum(["edit", "live", "preview", "fullscreen"]).optional().describe("switch_mode 专用：edit/live/preview/fullscreen"),
+    direction: z.enum(["larger", "smaller"]).optional().describe("resize 专用：larger(默认)/smaller"),
+  }),
+  run: async ({ cardName, action, mode, direction }, ctx) => {
+    const trace: TraceStep[] = [];
+    const page = ctx.page;
+
+    const r = await ensureCardOpen(page, ctx, cardName);
+    if (!r.ok) {
+      return { ok: false, summary: r.reason ?? `未能打开卡片 "${cardName}"`, data: { cardName }, trace };
+    }
+    trace.push({ label: `已打开卡片 "${r.fullName}" 详情` });
+
+    // 进描述编辑态：点 Edit/Add Description → 等 .w-md-editor 根（preview 模式无 textarea，故以根为准）
+    let entry = page.getByTitle(/edit description|编辑描述/i).first();
+    if ((await entry.count().catch(() => 0)) === 0) {
+      entry = page.getByTitle(/add description|添加描述/i).first();
+    }
+    if ((await entry.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: `卡片 "${r.fullName}" 详情未找到描述编辑入口`, data: { cardName: r.fullName }, trace };
+    }
+    await entry.scrollIntoViewIfNeeded().catch(() => {});
+    await entry.click({ timeout: 10_000 }).catch(() => {});
+    await page.waitForSelector(".w-md-editor", { timeout: 10_000 }).catch(() => {});
+    const editor = page.locator(".w-md-editor").first();
+    if ((await editor.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: "描述编辑器未出现", data: { cardName: r.fullName }, trace };
+    }
+    trace.push({ label: "已进入描述编辑态" });
+
+    if (action === "switch_mode") {
+      const m = mode ?? "live";
+      const before = await readEditorMode(page);
+      const reached = (after: { mode: string | null; fullscreen: boolean }) =>
+        (m === "edit" && after.mode === "edit") ||
+        (m === "live" && after.mode === "live") ||
+        (m === "preview" && after.mode === "preview") ||
+        (m === "fullscreen" && after.fullscreen);
+
+      // 主路径：点工具栏右侧模式按钮（@uiw v4 extraCommands，title 含模式名）
+      const titleFrag = m === "fullscreen" ? "full" : m;
+      const modeBtn = page.locator(`.w-md-editor button[title*="${titleFrag}" i]`).first();
+      if (await modeBtn.count().catch(() => 0).then((c) => c > 0)) {
+        await modeBtn.click({ timeout: 8_000 }).catch(() => {});
+        await page.waitForTimeout(500);
+      } else {
+        // 兜底：textarea 可见时试快捷键
+        const ta = page.locator(".w-md-editor-text-input").first();
+        if (await ta.count().catch(() => 0).then((c) => c > 0)) {
+          await ta.click({ timeout: 5_000 }).catch(() => {});
+          const sc: Record<string, string> = { edit: "Control+7", live: "Control+8", preview: "Control+9", fullscreen: "Control+0" };
+          await page.keyboard.press(sc[m] ?? "Control+8").catch(() => {});
+          await page.waitForTimeout(400);
+        }
+      }
+      let after = await readEditorMode(page);
+      trace.push({
+        label: `switch_mode ${m}：mode=${before.mode},fs=${before.fullscreen} → mode=${after.mode},fs=${after.fullscreen}`,
+      });
+      const ok = reached(after);
+      const o = await ctx.session.observe();
+      return {
+        ok,
+        summary: `已切换编辑器到 ${m}（mode=${after.mode},fullscreen=${after.fullscreen}，ok=${ok}）`,
+        data: { cardName: r.fullName, action, mode: m, before, after, url: o.url },
+        trace,
+      };
+    }
+
+    if (action === "resize") {
+      const dir = direction ?? "larger";
+      const boxBefore = await editor.boundingBox().catch(() => null);
+      // 拖动手柄：.w-md-editor-bar（cursor s-resize）
+      const handle = page.locator(".w-md-editor-bar, .w-md-editor-drag-bar, [class*='drag-bar']").first();
+      if ((await handle.count().catch(() => 0)) === 0 || !boxBefore) {
+        return { ok: false, summary: "未找到编辑器拖动手柄（.w-md-editor-bar）", data: { cardName: r.fullName, action }, trace };
+      }
+      const hBox = await handle.boundingBox().catch(() => null);
+      if (hBox) {
+        const cx = hBox.x + hBox.width / 2;
+        const cy = hBox.y + hBox.height / 2;
+        const dy = dir === "larger" ? 120 : -80;
+        await page.mouse.move(cx, cy);
+        await page.mouse.down();
+        await page.mouse.move(cx, cy + dy, { steps: 8 });
+        await page.mouse.up();
+        await page.waitForTimeout(500);
+      }
+      const boxAfter = await editor.boundingBox().catch(() => null);
+      const grew = !!boxBefore && !!boxAfter && boxAfter.height > boxBefore.height + 5;
+      const shrank = !!boxBefore && !!boxAfter && boxAfter.height < boxBefore.height - 5;
+      const ok = dir === "larger" ? grew : shrank;
+      trace.push({ label: `resize ${dir}：高度 ${boxBefore?.height ?? "?"} → ${boxAfter?.height ?? "?"}，ok=${ok}` });
+      const o = await ctx.session.observe();
+      return {
+        ok,
+        summary: `已${dir === "larger" ? "放大" : "缩小"}编辑器（高 ${boxBefore?.height}→${boxAfter?.height}）`,
+        data: { cardName: r.fullName, action, direction: dir, heightBefore: boxBefore?.height, heightAfter: boxAfter?.height, ok, url: o.url },
+        trace,
+      };
+    }
+
+    // action === "help"：点工具栏帮助按钮(Open help) → 新标签页打开 markdownguide.org
+    const helpBtn = page
+      .locator('.w-md-editor button[title*="help" i], .w-md-editor [aria-label*="help" i], .w-md-editor a[title*="help" i]')
+      .first();
+    if ((await helpBtn.count().catch(() => 0)) === 0) {
+      return { ok: false, summary: "未找到编辑器帮助按钮", data: { cardName: r.fullName, action }, trace };
+    }
+    await helpBtn.scrollIntoViewIfNeeded().catch(() => {});
+    // @uiw commands.help 用 window.open 开新标签；用 context 级 'page' 事件兜底 page 级 'popup'
+    const context = page.context();
+    const newPagePromise = context.waitForEvent("page", { timeout: 10_000 }).catch(() => null);
+    await helpBtn.click({ timeout: 8_000 }).catch(() => {});
+    const newPage = await newPagePromise;
+    let helpUrl = "";
+    if (newPage) {
+      await newPage.waitForLoadState("domcontentloaded", { timeout: 12_000 }).catch(() => {});
+      helpUrl = newPage.url();
+      await newPage.close().catch(() => {});
+    }
+    if (!helpUrl || helpUrl === "about:blank") helpUrl = page.url();
+    const ok = /markdownguide\.org|basic-syntax/i.test(helpUrl);
+    trace.push({ label: `help：url=${helpUrl}，ok=${ok}（newPage=${!!newPage}）` });
+    const o = await ctx.session.observe();
+    return {
+      ok,
+      summary: ok ? `已打开 Markdown 基本语法页（${helpUrl}）` : `已点帮助按钮（url=${helpUrl}，请确认）`,
+      data: { cardName: r.fullName, action, helpUrl, ok, url: o.url },
       trace,
     };
   },
