@@ -210,7 +210,16 @@ npm run run-mutation -- --layer spec --scenario board-create-happy-path   # P5 L
 - 结论：判官「**不查规约、查行为；且行为故障检出依赖证据是否冗余**」——富证据场景要全通道失败才 FAIL。
 - 代码 `app/src/agent/mutation/`（operators/mutants=Layer1，traceFaults/runMutationTrace=Layer2，runMutation/report 共用）；CLI `npm run run-mutation -- --layer spec|trace [--scenario|--feature|--limit]`。报告落 `app/outputs/mutation/`（gitignored）。
 
-**之后**：① 前端可视化（渲染轨迹/结果/变异报告）；②（可选）判官加固：规则启发式双通道 + strict 判官变体（逐字核对 expectation），量化宽松代价、拉高 Layer1/富证据场景得分；③（可选）manage-labels-1 的 edit-rename、open-help popup 替代。
+**前端组织方案（2026-06-18 定型，下次开工用）**：
+- **定位**：交互控制台——浏览任务一 catalog、触发并实时看任务二场景执行（ReAct 轨迹）、触发并看 P5 变异分数；答辩演示用。
+- **栈**：Vite + React + TS（前端）+ Node 后端（Hono，SSE 流式进度），复用现有 TS 函数、不 shell CLI。
+- **视觉**：看板风结构（三列 任务一 / 任务二 / P5，每场景一张卡，贴合被测 4gaBoards）+ **Claude 牛皮纸皮肤**（暖黄牛皮纸底 + 衬线细字体 + Claude 橘土点缀）。
+- **复用点**：`loadScenarioSet`（catalog，已入库 basic）、`runScenario`（需给 `runReactLoop` 加 `onStep` 回调，唯一要改的现有代码）、`runMutation`/`runMutationTrace`（已有 `onMutant`/`onScenario`/`onFault` 可直接喂 SSE）、读 `outputs/runs` + `outputs/mutation` 已有报告。
+- **约束**：单账号串行（全局 in-flight 锁，并发 409）；运行真改 demo 站数据（runner 已含 namespace 清理）；批量（30 场景 ~1h）只支持加载已有报告、不实时跑。
+- **分期**：① 先做只读牛皮纸看板外壳（catalog + 已有报告）锁样式；② 再加 Node 后端 + SSE + Run 按钮做交互。
+- **Skill**：前端 build 用 `ConardLi/garden-skills` 的 **`web-design-engineer`**（HTML/CSS/JS/React 出「惊艳级」页面，自带 style-recipes 风格锚点，适合定制牛皮纸看板皮肤；装法：作为 plugin 加到 `.claude/`）；精美 HTML 报告可备用 `beautiful-article`。
+
+**之后**：① 前端（按上方方案，用 web-design-engineer）；②（可选）判官加固：规则启发式双通道 + strict 判官变体（逐字核对 expectation），量化宽松代价、拉高 Layer1/富证据场景得分；③（可选）manage-labels-1 的 edit-rename、open-help popup 替代。
 
 **已知问题（非工具缺陷）**：
 - 弱网下批量 `page.goto` 登录/清理偶发 60s 超时；cleanup 语言恢复在弱网下脆弱。

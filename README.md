@@ -216,7 +216,7 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 
 **四要素**：规划（场景 `phases` 作计划骨架）/ 记忆（短期轨迹 + scratchpad）/ 执行（Playwright 工具执行器）/ 验证（两层 LLM judge：步骤检查点 + 场景终判）。
 
-**路线**：✅ P0 浏览器地基 + 工具框架 → ✅ P1 跑通 happy_path → ✅ P1.5 设置簇工具（settings 84%）→ ✅ P2 judge → ✅ P3 批量 harness + 通过率报告 → ✅ P4 健壮性（state 隔离 / 拖拽 / 清理）+ 领域工具扩展（A 层 8→18 工具）→ ✅ card 工具补全（A 层 18→20 工具，5 场景 3/5）→ ⬜ P5 变异测试（提升档）→ 前端。
+**路线**：✅ P0 浏览器地基 + 工具框架 → ✅ P1 跑通 happy_path → ✅ P1.5 设置簇工具（settings 84%）→ ✅ P2 judge → ✅ P3 批量 harness + 通过率报告 → ✅ P4 健壮性（state 隔离 / 拖拽 / 清理）+ 领域工具扩展（A 层 8→18 工具）→ ✅ card 工具补全（A 层 18→20 工具，5 场景 3/5）→ ✅ P5 变异测试（Mutation Score 33%，判官 oracle 评估）→ ⬜ 前端（牛皮纸看板风交互控制台，见末尾「今日进度」）。
 
 > 完整设计（两层工具架构、目录设想、已知难点、底线细则）见 [CLAUDE.md](CLAUDE.md)「任务二实现方案」。
 
@@ -229,3 +229,28 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 - 目标应用文档源（仅参考）：<https://github.com/RARgames/4gaBoardsDocs>
 - 用户手册站：<https://docs.4gaboards.com/>
 - 应用 Demo：<https://demo.4gaboards.com/>
+
+---
+
+## 今日进度（2026-06-18）
+
+**今天干了什么**
+
+- **P5 变异测试完成并提交（`460241f`）**：给独立 LLM 判官打分（被测 = 判官，app 恒正确），新增 `app/src/agent/mutation/` + CLI `npm run run-mutation -- --layer spec|trace`。
+  - **Layer 1**（改 expectation，真跑正确 app，重判官）= **spec-sensitivity ≈ 0%**——判官无视 expectation、靠 title+steps+trace 推断核心目标；把 title+desc+expectation+steps 整体改成另一目标也 0/3 全存活，且会**主动推翻亲眼看到的 spec 矛盾**（自述「实际选了 Simple 而非指定的 Kanban，但核心目标达成」）。
+  - **Layer 2**（往真实轨迹注入故障、用原场景重判官）= **Mutation Score 3/9 (33%)**——判官做**多源证据和解**，单个失败步骤会被幸存证据救回（card-create 自述「card_create 首次失败，但列表卡片数 2→3，创建成功」）。薄证据/单动作场景（list-sort / settings-theme / sidebar-toggle）**100% killed**；富证据/多步（board / card / view / notifications）**0%**。
+  - **结论**：判官「**不查规约、查行为；行为故障的检出依赖证据是否冗余**」——富证据场景要所有证据通道同时失败才会 FAIL。
+
+**前端组织方案（讨论定型，下次开工用）**
+
+- **定位**：交互控制台——浏览任务一 catalog、触发并实时看任务二场景执行（ReAct 轨迹）、触发并看 P5 变异分数；答辩演示用。
+- **栈**：Vite + React + TS（前端）+ Node 后端（Hono，SSE 流式进度），复用现有 TS 函数、不 shell CLI。
+- **视觉**：看板风结构（三列 任务一 / 任务二 / P5，每场景一张卡，贴合被测 4gaBoards）+ **Claude 牛皮纸皮肤**（暖黄牛皮纸底 + 衬线细字体 + Claude 橘土点缀）。
+- **复用点**：`loadScenarioSet`（catalog）、`runScenario`（需给 `runReactLoop` 加 `onStep` 回调，唯一要改的现有代码）、`runMutation`/`runMutationTrace`（已有 `onMutant`/`onScenario`/`onFault` 可喂 SSE）、读 `outputs/runs` + `outputs/mutation` 已有报告。
+- **约束**：单账号串行（全局 in-flight 锁）；批量只支持加载已有报告、不实时跑。
+- **分期**：① 先做只读牛皮纸看板外壳（catalog + 已有报告）锁样式；② 再加 Node 后端 + SSE + Run 按钮做交互。
+
+**Skill（`ConardLi/garden-skills`，下次用）**
+
+- **`web-design-engineer`** ✅：前端 build 阶段用，HTML/CSS/JS/React 出「惊艳级」页面，自带 style-recipes 风格锚点，适合定制「牛皮纸看板」皮肤。装法：把该仓库作为 plugin 加到 `.claude/`。
+- `beautiful-article`：下次若要精美 HTML 报告可用（任意素材 → 精美文章；本次未用，今日进度走 Markdown）。
