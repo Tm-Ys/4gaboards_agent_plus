@@ -13,6 +13,7 @@
     "run-scenario": "tsx src/agent/cli/run.ts",
     "run-batch": "tsx src/agent/cli/run-batch.ts",
     "run-mutation": "tsx src/agent/cli/run-mutation.ts",
+    "run-judge-cost": "tsx src/agent/cli/run-judge-cost.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

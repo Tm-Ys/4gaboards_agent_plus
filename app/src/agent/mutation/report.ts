@@ -6,6 +6,7 @@
 // detail 在 Layer1=期望差异、Layer2=故障摘要。
 
 import type { ScenarioMutationReport } from "./runMutation";
+import type { JudgeMode } from "../verify/judge";
 
 export interface BucketScore {
   total: number;
@@ -37,6 +38,8 @@ export interface ScoredScenario {
 
 export interface MutationSummary {
   layer: "spec" | "trace";
+  /** 产出本 summary 的判官档（lenient/strict）；undefined=既有宽松（向后兼容）。 */
+  judgeMode?: JudgeMode;
   scenariosTotal: number;
   scenariosMutated: number; // 基线 PASS 且产出了变异体/故障
   scenariosSkipped: number; // 基线 FAIL/异常
@@ -122,9 +125,9 @@ export function summarizeScored(layer: "spec" | "trace", scenarios: ScoredScenar
   };
 }
 
-/** Layer1 适配：把 ScenarioMutationReport[] 映射成 ScoredScene[] 再打分。 */
-export function summarizeMutation(reports: ScenarioMutationReport[]): MutationSummary {
-  const scenarios: ScoredScenario[] = reports.map((r) => ({
+/** Layer1 适配：把 ScenarioMutationReport[] 映射成 ScoredScenario[]。导出供 --judge both 配对用。 */
+export function scoredFromMutationReports(reports: ScenarioMutationReport[]): ScoredScenario[] {
+  return reports.map((r) => ({
     scenarioId: r.scenarioId,
     featureId: r.featureId,
     skipped: r.skipped,
@@ -138,7 +141,11 @@ export function summarizeMutation(reports: ScenarioMutationReport[]): MutationSu
       reason: mr.verdict.reason,
     })),
   }));
-  return summarizeScored("spec", scenarios);
+}
+
+/** Layer1 打分。 */
+export function summarizeMutation(reports: ScenarioMutationReport[]): MutationSummary {
+  return summarizeScored("spec", scoredFromMutationReports(reports));
 }
 
 /** Layer2 适配：直接接收 ScoredScene[]（由 runMutationTrace 构造）。 */
@@ -155,4 +162,105 @@ export function scenarioSubtotal(r: ScenarioMutationReport): BucketScore {
   const b = emptyBucket();
   for (const mr of r.results) bump(b, mr.killed);
   return b;
+}
+
+// ── 两判官对比（--judge both 用）──────────────────────────────────────────
+// lenient vs strict 同一批场景/同一批 item（mutant/fault id 不含判官档，两 mode 间一致）。
+// 核心产出：strictOnly = 宽松漏检而 strict 抓到的逐条（量化宽松漏检，最有价值）。
+
+export interface ItemVerdictDiff {
+  scenarioId: string;
+  id: string;
+  operatorId: string;
+  category: string;
+  description: string;
+  lenientKilled: boolean;
+  strictKilled: boolean;
+  /** 宽松漏检而 strict 抓到（!lenient && strict）——宽松代价的另一面。 */
+  strictOnly: boolean;
+  /** strict 放过而 lenient 抓到（罕见，多为 soft 类）——strict 反而更松的项。 */
+  lenientOnly: boolean;
+}
+
+export interface JudgeComparison {
+  layer: "spec" | "trace";
+  lenient: MutationSummary;
+  strict: MutationSummary;
+  /** must-kill 桶对比：strict 相对 lenient 的检出提升。 */
+  mustKillDelta: {
+    lenientKilled: number;
+    strictKilled: number;
+    total: number;
+    lenientScore: number;
+    strictScore: number;
+  };
+  /** 按算子并排对比（两边算子并集）。 */
+  byOperatorDelta: Record<string, { lenient: BucketScore; strict: BucketScore }>;
+  /** 逐条对比（按 lenient 顺序；strict 缺失视为未杀）。 */
+  itemDiff: ItemVerdictDiff[];
+}
+
+/**
+ * 对比两判官在同一批变异/故障上的判定。
+ * 入参为两 mode 各自的 summary + ScoredScenario[]（item id 在两 mode 间一致）。
+ */
+export function compareJudges(
+  layer: "spec" | "trace",
+  lenientSum: MutationSummary,
+  strictSum: MutationSummary,
+  lenientScenarios: ScoredScenario[],
+  strictScenarios: ScoredScenario[],
+): JudgeComparison {
+  const strictMap = new Map<string, ScoredItem>();
+  for (const sc of strictScenarios) {
+    for (const it of sc.items) strictMap.set(`${sc.scenarioId}::${it.id}`, it);
+  }
+
+  const itemDiff: ItemVerdictDiff[] = [];
+  for (const sc of lenientScenarios) {
+    if (sc.skipped) continue;
+    for (const it of sc.items) {
+      const s = strictMap.get(`${sc.scenarioId}::${it.id}`);
+      const strictKilled = s?.killed ?? false;
+      itemDiff.push({
+        scenarioId: sc.scenarioId,
+        id: it.id,
+        operatorId: it.operatorId,
+        category: it.category,
+        description: it.description,
+        lenientKilled: it.killed,
+        strictKilled,
+        strictOnly: !it.killed && strictKilled,
+        lenientOnly: it.killed && !strictKilled,
+      });
+    }
+  }
+
+  const lmk = lenientSum.byCategory["must-kill"] ?? emptyBucket();
+  const smk = strictSum.byCategory["must-kill"] ?? emptyBucket();
+  const mustKillDelta = {
+    lenientKilled: lmk.killed,
+    strictKilled: smk.killed,
+    total: smk.total,
+    lenientScore: lmk.score,
+    strictScore: smk.score,
+  };
+
+  const ops = new Set<string>([...Object.keys(lenientSum.byOperator), ...Object.keys(strictSum.byOperator)]);
+  const byOperatorDelta: Record<string, { lenient: BucketScore; strict: BucketScore }> = {};
+  for (const op of ops) {
+    byOperatorDelta[op] = {
+      lenient: lenientSum.byOperator[op] ?? emptyBucket(),
+      strict: strictSum.byOperator[op] ?? emptyBucket(),
+    };
+  }
+
+  return {
+    layer,
+    lenient: { ...lenientSum, judgeMode: "lenient" },
+    strict: { ...strictSum, judgeMode: "strict" },
+    mustKillDelta,
+    byOperatorDelta,
+    itemDiff,
+  };
 }

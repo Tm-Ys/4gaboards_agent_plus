@@ -34,18 +34,27 @@ export async function chatJson(
   opts: ChatJsonOptions = {},
 ): Promise<Record<string, unknown>> {
   const c = getClient();
-  const resp = await c.chat.completions.create({
-    model: opts.model ?? settings.deepseekModel,
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-    temperature: opts.temperature ?? 0.2,
-    response_format: { type: "json_object" },
-    ...(opts.maxTokens ? { max_tokens: opts.maxTokens } : {}),
-  });
-  const content = resp.choices[0]?.message?.content ?? "{}";
-  return JSON.parse(stripCodeFence(content));
+  // DeepSeek 偶发返回畸形/截断 JSON（即便 json_object 模式），重试几次根治。
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const resp = await c.chat.completions.create({
+        model: opts.model ?? settings.deepseekModel,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        temperature: opts.temperature ?? 0.2,
+        response_format: { type: "json_object" },
+        ...(opts.maxTokens ? { max_tokens: opts.maxTokens } : {}),
+      });
+      const content = resp.choices[0]?.message?.content ?? "{}";
+      return JSON.parse(stripCodeFence(content));
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
 }
 
 /** 带 tools 的 function-calling 调用（ReAct 循环用）。返回原始 completion。 */

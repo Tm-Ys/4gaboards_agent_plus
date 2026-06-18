@@ -152,6 +152,7 @@
 - ✅ **领域工具扩展**：A 层 8→**18 工具**。card/view 前置+编辑（`card_open`/`view_switch`/`card_edit_description`）、list 簇列操作（`list_view_menu_action`/`toggle_column`/`sort`）、card 详情（`card_menu_action`/`edit_title`/`manage_comments`/`toggle_section`）；共享 helper（`namespaced`/`ensureCardOpen`/`ensureListView`/`ensureBoardView`/`closeCardModalIfOpen`/`isListView`）。CLI `--feature` 改前缀匹配。三簇验证 view 3/4、list-view 4/6、card 10/21。
 - ✅ **card 工具补全**：A 层 18→**20 工具**。新增 `card_manage_labels`（toggle/create/edit；彩色按钮+`button[title]` 定位+socket 轮询读 nameActive）与 `card_text_editor`（switch_mode 点工具栏模式按钮/resize 拖 `.w-md-editor-bar`/help）。抽 `enterDescriptionEdit`/`readEditorMode`。五场景 **3/5**：switch-modes、resize、manage-labels-2 PASS；open-help（@uiw window.open 环境受限）、manage-labels-1（复杂 medium）FAIL。
 - ✅ **P5 变异测试（oracle 评估）**：给独立判官打分（被测=判官，app 恒正确）。**Layer1**（改 expectation，真跑正确 app，重判官）= **spec-sensitivity ≈ 0%**——判官无视 expectation、靠 title+steps+trace 推断核心目标，goal-level 全改也 0/3，且会主动推翻亲眼看到的 spec 矛盾。**Layer2**（往真实轨迹注入故障、用原场景重判官）= **3/9 (33%)**——判官做**多源证据和解**，单步失败被幸存证据（卡片数 2→3、URL、列表）救回；薄证据场景（sort/theme/toggle）100% killed，富证据/多步（board/card/view/notifications）0%。结论：判官「不查规约、查行为；行为故障检出依赖证据是否冗余」。代码 `app/src/agent/mutation/`，CLI `run-mutation --layer spec|trace`。
+- ✅ **P6 判官加固·strict 变体**：新增 strict 判官（逐条核对 expectation + 终态优先历史不救 + must-have/nice-to-have 分类 + 状态可表达性降级），与 lenient 并存。`--judge both` 两判官对比（`baselineOverride` 复用基线，浏览器只跑一次、判官跑两遍）。实测：Layer1 board-create lenient **0%→strict 57%**（must-kill 0→38%；entity-swap/state-swap/soft 大幅提升，**negate 仍 0% 弱点**）；宽松代价（30 场景零浏览器重判）真实 PASS 率 lenient **46%**/strict **25%**，**strict 误杀 7 个真实通过（-21pp）**。另修 `chatJson` 3 次重试 + 变异体/故障循环单条容错（DeepSeek 偶发畸形 JSON 曾让 `--judge both` 整批崩）。代码 `verify/judge.ts` + `mutation/{runMutation,runMutationTrace,report}` + `cli/{run-mutation,run-judge-cost}` + `llm.ts`，CLI `run-mutation --judge both` / `run-judge-cost --batch`。
 - ⬜ **前端**：渲染轨迹与结果；任务一面板接 `loadScenarioSet`。
 
 ### 实际目录（已实现）
@@ -179,6 +180,8 @@ npm run run-scenario -- --list                                # 列场景
 npm run run-batch -- --difficulty easy --tag happy_path --limit 30   # 批量+通过率
 npm run run-mutation -- --layer trace                # P5 Layer2：注入 trace 故障→重判官→Mutation Score
 npm run run-mutation -- --layer spec --scenario board-create-happy-path   # P5 Layer1：改 expectation→重判官
+npm run run-mutation -- --layer spec --judge both    # P6：lenient vs strict 两判官并排对比（both 复用基线，浏览器只跑一次）
+npm run run-judge-cost -- --batch outputs/runs/batch-*.json   # P6：零浏览器宽松代价三角（lenient vs strict 真实PASS率 + 误杀明细）
 ```
 轨迹/报告落 `app/outputs/runs/`（gitignored）。
 
@@ -188,7 +191,7 @@ npm run run-mutation -- --layer spec --scenario board-create-happy-path   # P5 L
 
 ## 🔜 下次接着做（handoff）
 
-**当前位置**：任务二 **P5 变异测试已完成**（2026-06-18）。在 P4（A 层 20 工具）之上新增 oracle 评估：Layer1（改 expectation）spec-sensitivity ≈ 0%；Layer2（注入 trace 故障）Mutation Score **3/9 (33%)**。
+**当前位置**：任务二 **P6 判官加固（strict 变体）已完成**（2026-06-18）。在 P5 之上新增 strict 判官 + 宽松代价量化：Layer1 board-create lenient **0%→strict 57%**（must-kill 0→38%）；真实通过率 lenient **46%** / strict **25%**（strict 误杀 7 个真实通过，-21pp）。
 
 **P4 健壮性（已完成）**：① 状态隔离 `resetAccountLanguage`（每场景恢复英文，settings 簇 68%→84%）；② 命名空间 + REST 清理 `cleanupTestProjects`（按 `${ns}-` 前缀删 board/project）；③ 拖拽 `card_drag`（react-beautiful-dnd mouse 多步 move，非 click/dragAndDrop）。
 
@@ -210,6 +213,14 @@ npm run run-mutation -- --layer spec --scenario board-create-happy-path   # P5 L
 - 结论：判官「**不查规约、查行为；且行为故障检出依赖证据是否冗余**」——富证据场景要全通道失败才 FAIL。
 - 代码 `app/src/agent/mutation/`（operators/mutants=Layer1，traceFaults/runMutationTrace=Layer2，runMutation/report 共用）；CLI `npm run run-mutation -- --layer spec|trace [--scenario|--feature|--limit]`。报告落 `app/outputs/mutation/`（gitignored）。
 
+**P6 判官加固·strict 变体（已完成，2026-06-18）**——量化宽松代价：
+- **strict 判官**（`judge.ts` 加 `JudgeMode`：逐条核对 expectation + 终态优先历史不救 + must-have/nice-to-have 分类 + 状态可表达性降级 + 跨语言强映射），与既有 lenient 并存，默认 lenient 不破坏既有行为。
+- **Layer1 board-create both 实测**：lenient **0/14（must-kill 0%）** → strict **8/14（must-kill 38%）**。按算子 entity-swap 0→67%、state-swap 0→100%、soft(keyword/feature) 0→75-100%；**negate 0→0%（strict 弱点，取反类仍漏，待 prompt 调优）**。
+- **宽松代价（30 场景零浏览器重判）**：真实 PASS 率 lenient 46% / strict 25%，**strict 误杀 7 个真实通过（-21pp）**。误杀里 ~2 个是真问题（board-view-toggle 终态视图、board-export-csv 操作路径偏离）、~5 个 strict 太严（headless 下载无 UI 提示 / 终态本就该关 / demo 无数据）。
+- **`--judge both`**：runner 加 `baselineOverride` 复用基线 trace（浏览器只跑一次、判官跑两遍）；`report.ts` 加 `compareJudges`（strict-only kills = 宽松漏检锚点）。
+- **健壮性修复**：DeepSeek 偶发畸形 JSON 曾让 `--judge both`（调用翻倍）整批崩 → `chatJson` 加 3 次重试 + 变异体/故障循环单条容错（跳过失败项不崩、不丢已跑结果）。
+- 代码：`verify/judge.ts`(JudgeMode/STRICT prompt) + `mutation/{runMutation,runMutationTrace}`(judgeMode/baselineOverride 透传) + `mutation/report.ts`(compareJudges/JudgeComparison) + `cli/run-mutation.ts`(--judge both) + `cli/run-judge-cost.ts`(宽松代价三角，零浏览器) + `llm.ts`(chatJson 重试)。
+
 **前端组织方案（2026-06-18 定型，下次开工用）**：
 - **定位**：交互控制台——浏览任务一 catalog、触发并实时看任务二场景执行（ReAct 轨迹）、触发并看 P5 变异分数；答辩演示用。
 - **栈**：Vite + React + TS（前端）+ Node 后端（Hono，SSE 流式进度），复用现有 TS 函数、不 shell CLI。
@@ -219,7 +230,7 @@ npm run run-mutation -- --layer spec --scenario board-create-happy-path   # P5 L
 - **分期**：① 先做只读牛皮纸看板外壳（catalog + 已有报告）锁样式；② 再加 Node 后端 + SSE + Run 按钮做交互。
 - **Skill**：前端 build 用 `ConardLi/garden-skills` 的 **`web-design-engineer`**（HTML/CSS/JS/React 出「惊艳级」页面，自带 style-recipes 风格锚点，适合定制牛皮纸看板皮肤；装法：作为 plugin 加到 `.claude/`）；精美 HTML 报告可备用 `beautiful-article`。
 
-**之后**：① 前端（按上方方案，用 web-design-engineer）；②（可选）判官加固：规则启发式双通道 + strict 判官变体（逐字核对 expectation），量化宽松代价、拉高 Layer1/富证据场景得分；③（可选）manage-labels-1 的 edit-rename、open-help popup 替代。
+**之后**：① 前端（按上方方案，用 web-design-engineer）；②（可选）strict 判官进一步加固：negate 类仍 0%（prompt 调优 / 规则双通道补存在性核对）、Layer2 both 全量验证（exec-failure 富证据场景预期从 ~0% 拉高）；③（可选）manage-labels-1 的 edit-rename、open-help popup 替代。
 
 **已知问题（非工具缺陷）**：
 - 弱网下批量 `page.goto` 登录/清理偶发 60s 超时；cleanup 语言恢复在弱网下脆弱。
@@ -241,5 +252,6 @@ npm run run-mutation -- --layer spec --scenario board-create-happy-path   # P5 L
 - ✅ **领域工具扩展**：A 层 8→**18 工具**。新增 card_open/view_switch/card_edit_description（card/view 簇前置+编辑）、list_view_menu_action/toggle_column/sort（list 簇列操作）、card_menu_action/edit_title/manage_comments/toggle_section（card 详情菜单/编辑）。CLI `--feature` 改前缀匹配。三簇验证：view 3/4、list-view 4/6、card 10/21（含网络异常）。
 - ✅ **card 工具补全（2026-06-16）**：A 层 18→**20 工具**。新增 `card_manage_labels`（toggle/create/edit，彩色按钮+socket 轮询）与 `card_text_editor`（switch_mode/resize/help，工具栏模式按钮+.w-md-editor-bar）。抽 `enterDescriptionEdit`/`readEditorMode` helper。五场景验证 **3/5**：switch-modes / resize / manage-labels-2 PASS；open-help（环境受限）/ manage-labels-1（复杂 medium）FAIL。
 - ✅ **P5 变异测试（2026-06-18）**：Layer1 改 expectation→spec-sensitivity≈0%（判官靠核心目标推断、无视 expectation）；Layer2 注入 trace 故障→Mutation Score **3/9 (33%)**（薄证据场景 100%、富证据 0%，判官多源证据和解）。代码 `app/src/agent/mutation/`，CLI `run-mutation --layer spec|trace`。
+- ✅ **P6 判官加固·strict 变体（2026-06-18）**：strict 判官（逐条核对+终态优先+must-have/nice-to-have 分类），`--judge both` 两判官对比。Layer1 board-create lenient 0%→strict 57%（must-kill 0→38%，negate 仍 0% 弱点）；宽松代价 lenient 46%/strict 25%，strict 误杀 7 个真实通过（-21pp）。修 `chatJson` 重试 + 循环容错。代码 `verify/judge.ts`+`mutation/*`+`cli/{run-mutation,run-judge-cost}`+`llm.ts`，CLI `run-mutation --judge both` / `run-judge-cost`。
 - ⬜ 可视化前端（TS）：渲染轨迹/结果/变异报告。
 - ⚠️ 已知：弱网下批量 `page.goto` 登录/清理偶发超时（非工具缺陷）；open-help 受 @uiw window.open 限制；manage-labels-1 复杂 medium 待编排优化；P5 Layer2 的 semantic-flip 偶发不触发（finalObs 多英文/符号 AX 树，中文状态 token 难命中）、layout-missing 仅创建类场景适用（需 namespace 资源在 finalObs）。

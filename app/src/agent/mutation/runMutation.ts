@@ -8,7 +8,7 @@
 
 import { runScenario, type ScenarioRunResult } from "../runner/runScenario";
 import { resetAccountLanguage } from "../runner/resetState";
-import { judgeScenario, type Verdict } from "../verify/judge";
+import { judgeScenario, type Verdict, type JudgeMode } from "../verify/judge";
 import { generateMutants, type Mutant } from "./mutants";
 import type { TestScenario } from "../../schemas";
 
@@ -40,6 +40,10 @@ export interface MutationRunOptions {
   namespace?: string;
   onMutant?: (idx: number, total: number, r: MutantResult) => void;
   onScenario?: (scenarioId: string, baselinePass: boolean, mutantCount: number) => void;
+  /** 判官严格档，默认 lenient（既有行为）。strict=逐条核对 expectation。 */
+  judgeMode?: JudgeMode;
+  /** 复用既有基线 trace：传入则跳过基线真跑+清理（零浏览器）。--judge both / run-judge-cost 用。 */
+  baselineOverride?: ScenarioRunResult;
 }
 
 export async function runMutation(
@@ -49,17 +53,22 @@ export async function runMutation(
   const namespace =
     opts.namespace ?? `mut-${scenario.id}-${stamp()}`.replace(/[^a-zA-Z0-9_-]/g, "-");
 
-  // 1. 基线真跑：原 expectation + 正确 app。cleanup 恢复账号级 state（语言等），避免污染后续场景的基线 trace。
+  // 1. 基线：baselineOverride 复用既有 trace（零浏览器，--judge both / run-judge-cost 用）；
+  //    否则真跑原 expectation + 正确 app（cleanup 恢复账号级 state，避免污染后续场景的基线 trace）。
   let baseline: ScenarioRunResult;
-  try {
-    baseline = await runScenario(scenario, {
-      maxSteps: opts.maxSteps ?? 20,
-      headless: opts.headless ?? true,
-      namespace,
-      cleanup: resetAccountLanguage,
-    });
-  } catch (e) {
-    return emptyReport(scenario, `基线运行异常：${e instanceof Error ? e.message : String(e)}`);
+  if (opts.baselineOverride) {
+    baseline = opts.baselineOverride;
+  } else {
+    try {
+      baseline = await runScenario(scenario, {
+        maxSteps: opts.maxSteps ?? 20,
+        headless: opts.headless ?? true,
+        namespace,
+        cleanup: resetAccountLanguage,
+      });
+    } catch (e) {
+      return emptyReport(scenario, `基线运行异常：${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   // 2. 基线必须 PASS：否则无法判定变异体存活（判官可能「因别的原因」FAIL）。
@@ -77,7 +86,14 @@ export async function runMutation(
   const results: MutantResult[] = [];
   for (let i = 0; i < mutants.length; i++) {
     const m = mutants[i]!;
-    const verdict = await judgeScenario(m.mutatedScenario, baseline);
+    let verdict: Verdict;
+    try {
+      verdict = await judgeScenario(m.mutatedScenario, baseline, { mode: opts.judgeMode });
+    } catch (e) {
+      // 判官偶发失败（DeepSeek 畸形 JSON 等已重试仍败）：跳过该变异体，不崩整批、不丢已跑结果。
+      console.warn(`[mutation] 变异体 ${m.id} 判官失败，跳过：${e instanceof Error ? e.message : e}`);
+      continue;
+    }
     const killed = !verdict.pass; // 错误期望被判 FAIL = 觉察
     const r: MutantResult = { mutant: m, verdict, killed };
     results.push(r);

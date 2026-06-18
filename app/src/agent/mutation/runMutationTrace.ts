@@ -7,7 +7,7 @@
 
 import { runScenario, type ScenarioRunResult } from "../runner/runScenario";
 import { resetAccountLanguage } from "../runner/resetState";
-import { judgeScenario, type Verdict } from "../verify/judge";
+import { judgeScenario, type Verdict, type JudgeMode } from "../verify/judge";
 import { generateFaults, type Fault } from "./traceFaults";
 import type { TestScenario } from "../../schemas";
 
@@ -35,6 +35,10 @@ export interface TraceRunOptions {
   namespace?: string;
   onFault?: (idx: number, total: number, r: FaultResult) => void;
   onScenario?: (scenarioId: string, baselinePass: boolean, faultCount: number) => void;
+  /** 判官严格档，默认 lenient（既有行为）。strict=逐条核对 expectation。 */
+  judgeMode?: JudgeMode;
+  /** 复用既有基线 trace：传入则跳过基线真跑+清理（零浏览器）。--judge both / run-judge-cost 用。 */
+  baselineOverride?: ScenarioRunResult;
 }
 
 export async function runMutationTrace(
@@ -43,17 +47,21 @@ export async function runMutationTrace(
 ): Promise<ScenarioFaultReport> {
   const namespace = opts.namespace ?? `mut2-${scenario.id}-${stamp()}`.replace(/[^a-zA-Z0-9_-]/g, "-");
 
-  // 1. 基线真跑
+  // 1. 基线：baselineOverride 复用既有 trace（零浏览器，--judge both / run-judge-cost 用）；否则真跑。
   let baseline: ScenarioRunResult;
-  try {
-    baseline = await runScenario(scenario, {
-      maxSteps: opts.maxSteps ?? 20,
-      headless: opts.headless ?? true,
-      namespace,
-      cleanup: resetAccountLanguage,
-    });
-  } catch (e) {
-    return emptyReport(scenario, `基线运行异常：${e instanceof Error ? e.message : String(e)}`);
+  if (opts.baselineOverride) {
+    baseline = opts.baselineOverride;
+  } else {
+    try {
+      baseline = await runScenario(scenario, {
+        maxSteps: opts.maxSteps ?? 20,
+        headless: opts.headless ?? true,
+        namespace,
+        cleanup: resetAccountLanguage,
+      });
+    } catch (e) {
+      return emptyReport(scenario, `基线运行异常：${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   // 2. 基线必须 PASS：否则无法判定故障存活
@@ -72,7 +80,13 @@ export async function runMutationTrace(
   for (let i = 0; i < faults.length; i++) {
     const f = faults[i]!;
     // 注意：场景用【原】scenario（expectation 正确），run 用 faultedRun（行为故障）
-    const verdict = await judgeScenario(scenario, f.faultedRun);
+    let verdict: Verdict;
+    try {
+      verdict = await judgeScenario(scenario, f.faultedRun, { mode: opts.judgeMode });
+    } catch (e) {
+      console.warn(`[mutation] 故障 ${f.id} 判官失败，跳过：${e instanceof Error ? e.message : e}`);
+      continue;
+    }
     const killed = !verdict.pass;
     const r: FaultResult = { fault: f, verdict, killed };
     results.push(r);

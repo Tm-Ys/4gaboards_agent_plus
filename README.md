@@ -187,7 +187,7 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 - [x] 初始化本项目 git 仓库并关联远程：<https://github.com/Tm-Ys/4gaboards_agent_plus.git>
 - [x] 任务一：功能点提取 + 结构化测试场景生成（长上下文直填；Python 原型 `scenario_generator/` + TS 移植 `app/`）。
 - [ ] 任务一：功能点 / 测试场景的可视化展示（TS + Node）—— 暂缓。
-- [~] 任务二：ReAct 智能体（规划/记忆/执行/验证）对 `demo.4gaboards.com` 执行测试。**P0–P3 + P1.5 + P4 + 领域工具扩展 + card 工具补全已完成**：基线 43% → settings 簇 68% → **P4 健壮性**（state 隔离 / 命名空间清理 / 拖拽 `card_drag`）+ **领域工具扩展**（A 层 8→18 工具）+ **card 工具补全**（A 层 18→**20**：`card_manage_labels` toggle/create/edit、`card_text_editor` switch_mode/resize/help）。card 补全五场景 **3/5**（switch-modes / resize / manage-labels-2 PASS）。下一步 P5 变异 + 前端。
+- [~] 任务二：ReAct 智能体（规划/记忆/执行/验证）对 `demo.4gaboards.com` 执行测试。**P0–P3 + P1.5 + P4 + 领域工具扩展 + card 工具补全已完成**：基线 43% → settings 簇 68% → **P4 健壮性**（state 隔离 / 命名空间清理 / 拖拽 `card_drag`）+ **领域工具扩展**（A 层 8→18 工具）+ **card 工具补全**（A 层 18→**20**：`card_manage_labels` toggle/create/edit、`card_text_editor` switch_mode/resize/help）。card 补全五场景 **3/5**（switch-modes / resize / manage-labels-2 PASS）。+ **P5 变异测试**（Layer1 spec-sensitivity≈0% / Layer2 Mutation Score 33%）+ **P6 判官加固**（strict 判官变体 + 宽松代价三角：Layer1 lenient 0%→strict 57%，真实 PASS 率 46%→25%、strict 误杀 7）。下一步前端。
 - [ ] 任务二（提升档）：场景变异与典型应用错误识别。
 
 ---
@@ -254,3 +254,18 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 
 - **`web-design-engineer`** ✅：前端 build 阶段用，HTML/CSS/JS/React 出「惊艳级」页面，自带 style-recipes 风格锚点，适合定制「牛皮纸看板」皮肤。装法：把该仓库作为 plugin 加到 `.claude/`。
 - `beautiful-article`：下次若要精美 HTML 报告可用（任意素材 → 精美文章；本次未用，今日进度走 Markdown）。
+
+---
+
+## P6 判官加固（2026-06-18 续）
+
+**今天又干了什么**（在 P5 基础上，处理「P5 后可选项」之判官加固）：
+
+- **strict 判官变体 + 宽松代价量化**：新增逐条核对 expectation 的 strict 判官（`judge.ts` 加 `JudgeMode`：终态优先历史不救 + must-have/nice-to-have 分类 + 状态可表达性降级 + 跨语言强映射），与既有宽松 lenient 并存、默认 lenient 不破坏既有行为。
+- **`--judge both` 两判官对比**：runner 加 `baselineOverride` 复用基线 trace（浏览器只跑一次、判官跑两遍）；`report.ts` 加 `compareJudges`（strict-only kills = 宽松漏检锚点）。
+- **实测（Layer1 board-create-happy-path）**：lenient **0/14（must-kill 0%）** → strict **8/14（must-kill 38%）**。按算子 entity-swap 0→67%、state-swap 0→100%、soft 类 0→75-100%；**negate 0→0%（strict 弱点，取反类仍漏，待 prompt 调优）**。
+- **宽松代价（30 场景零浏览器重判）**：真实 PASS 率 lenient **46%** / strict **25%**，**strict 误杀 7 个真实通过（-21pp）**。误杀里 ~2 个是真问题（board-view-toggle 终态视图、board-export-csv 操作路径偏离）、~5 个 strict 太严（headless 下载无 UI 提示 / 终态本就该关 / demo 无数据）。
+- **健壮性修复**：DeepSeek 偶发畸形 JSON 曾让 `--judge both`（调用翻倍）整批崩 → `chatJson` 加 3 次重试 + 变异体/故障循环单条容错（跳过失败项不崩、不丢已跑结果）。
+- 代码：`verify/judge.ts` + `mutation/{runMutation,runMutationTrace,report}` + `cli/{run-mutation,run-judge-cost}` + `llm.ts`。CLI `npm run run-mutation -- --judge both` / `npm run run-judge-cost -- --batch <report>`。
+
+**结论**：宽松判官（lenient）高通过率但零规约敏感（Layer1 0%）；严格判官（strict）有规约敏感（Layer1 must-kill 38%）但误杀真实通过（-21pp）——这张 trade-off 三角表就是「宽松代价」的量化交付，对应评分标准「结果验证」提升档。
