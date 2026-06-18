@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import { ScenarioList } from "./components/ScenarioList";
 import { RunPanel } from "./components/RunPanel";
 import { Timeline } from "./components/Timeline";
+import { BatchLauncher } from "./components/BatchLauncher";
 import { BatchReportView } from "./components/BatchReportView";
+import { MutationLauncher } from "./components/MutationLauncher";
 import { MutationReportView } from "./components/MutationReportView";
 import { JudgeCostView } from "./components/JudgeCostView";
 
@@ -22,9 +24,13 @@ export function App() {
           <RunPanel />
           <Timeline />
           <hr className="col-divider" />
+          <BatchLauncher />
+          <hr className="col-divider" />
           <BatchReportView />
         </Column>
-        <Column title="任务三" subtitle="变异与宽松代价">
+        <Column title="任务三" subtitle="变异测试">
+          <MutationLauncher />
+          <hr className="col-divider" />
           <MutationReportView />
           <hr className="col-divider" />
           <JudgeCostView />

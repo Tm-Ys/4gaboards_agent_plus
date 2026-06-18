@@ -9,6 +9,9 @@ import "dotenv/config";
 import catalog from "./routes/catalog";
 import reports from "./routes/reports";
 import runScenarioRoute from "./routes/runScenario";
+import regenerateRoute from "./routes/regenerate";
+import batchRoute from "./routes/batch";
+import mutationRoute from "./routes/mutation";
 import { current as currentLock } from "./lib/lock";
 
 const app = new Hono();
@@ -18,6 +21,9 @@ app.route("/api/scenarios", catalog);
 app.route("/api", reports);
 // 交互（SSE）
 app.route("/api/run", runScenarioRoute);
+app.route("/api/regenerate", regenerateRoute);
+app.route("/api/batch", batchRoute);
+app.route("/api/mutation", mutationRoute);
 
 // 当前在跑任务（前端据此禁用 Run 按钮）
 app.get("/api/runlock", (c) => c.json({ running: currentLock() }));

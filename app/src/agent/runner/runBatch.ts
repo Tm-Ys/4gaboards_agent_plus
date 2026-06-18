@@ -2,6 +2,7 @@
 // 顺序跑（共享 demo 账号，并行会互相踩数据）。单个场景失败/异常不中断整批。
 
 import { runScenario, type ScenarioRunResult } from "./runScenario";
+import type { ReActStep } from "../react/types";
 import { resetAccountLanguage } from "./resetState";
 import { cleanupTestProjects } from "./cleanup";
 import type { TestScenario } from "../../schemas";
@@ -44,6 +45,8 @@ export interface RunBatchOptions {
   reset?: boolean;
   /** 批尾删除本批创建的测试 project（默认 true，按命名空间前缀）。 */
   cleanup?: boolean;
+  /** 每步回调（带 scenarioId，前端全量测试实时轨迹用）。 */
+  onStep?: (scenarioId: string, step: ReActStep) => void;
 }
 
 export async function runBatch(scenarios: TestScenario[], opts: RunBatchOptions = {}): Promise<BatchReport> {
@@ -57,7 +60,12 @@ export async function runBatch(scenarios: TestScenario[], opts: RunBatchOptions 
     const o: BatchOutcome = { scenario: sc };
     try {
       const cleanup = opts.reset === false ? undefined : resetAccountLanguage;
-      o.result = await runScenario(sc, { maxSteps: opts.maxSteps ?? 20, cleanup, namespace });
+      o.result = await runScenario(sc, {
+        maxSteps: opts.maxSteps ?? 20,
+        cleanup,
+        namespace,
+        onStep: opts.onStep ? (step) => opts.onStep!(sc.id, step) : undefined,
+      });
     } catch (e) {
       o.error = e instanceof Error ? e.message : String(e);
     }

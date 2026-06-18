@@ -6,7 +6,7 @@ export function Timeline() {
   const { steps, verdict, done, status, error } = useRun();
 
   if (status === "idle" && steps.length === 0) {
-    return <p className="placeholder">选场景点 Run，看 agent 边想边做的实时轨迹（答辩高潮）</p>;
+    return null;
   }
 
   return (

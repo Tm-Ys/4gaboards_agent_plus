@@ -412,6 +412,32 @@ body {
   background: var(--ink-500);
   border-color: var(--ink-500);
 }
+.btn--sm {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+/* 任务一：重新生成 */
+.scen-gen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.scen-gen__cur {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-500);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scen-gen__err {
+  font-size: 11px;
+  color: var(--bad);
+}
 
 /* Run 面板 */
 .runpanel {
@@ -603,6 +629,86 @@ body {
   border: none;
   border-top: 1px solid var(--paper-edge);
   margin: 12px 0;
+}
+
+/* 任务二：全量测试 */
+.batch-run {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.batch-run__ctrl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.chk {
+  font-size: 12px;
+  color: var(--ink-700);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.chk input {
+  accent-color: var(--clay);
+}
+.batch-run__cur {
+  background: var(--paper-bg);
+  border: 1px solid var(--paper-edge);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.batch-run__cur-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--clay-deep);
+}
+
+/* 任务三：变异测试触发 */
+.mut-launch {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mut-launch__ctrl {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.mut-launch__sel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-500);
+}
+.mut-launch__events {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--paper-bg);
+  border: 1px solid var(--paper-edge);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+}
+.mut-evt {
+  font-size: 11px;
+  color: var(--ink-700);
+  font-family: var(--font-mono);
+}
+.mut-evt--scen {
+  color: var(--clay-deep);
+}
+.mut-evt.is-kill {
+  color: var(--bad);
 }
 
 /* 宽松代价三角 */
