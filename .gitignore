@@ -7,6 +7,9 @@
 .claude
 .claude/
 
+# skills CLI 锁文件（本地 skill 安装状态；.claude/skills 已忽略）
+skills-lock.json
+
 # ===== 只读参考仓库（各自有上游，非本项目交付物）=====
 /4gaBoards/
 /4gaBoardsDocs/

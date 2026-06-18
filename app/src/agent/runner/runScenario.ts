@@ -8,7 +8,7 @@ import "../tools/domain"; // 注册 A 层
 import { runReactLoop } from "../react/loop";
 import { judgeScenario, type Verdict } from "../verify/judge";
 import type { TestScenario } from "../../schemas";
-import type { ReActRunResult } from "../react/types";
+import type { ReActRunResult, ReActStep } from "../react/types";
 
 export interface ScenarioRunResult extends ReActRunResult {
   scenarioId: string;
@@ -28,6 +28,8 @@ export interface RunScenarioOptions {
   cleanup?: (ctx: ToolContext) => Promise<void>;
   /** 批量命名空间：board/card 创建加前缀，便于批尾清理与并发隔离。 */
   namespace?: string;
+  /** 每步回调（透传给 runReactLoop，前端实时轨迹用）。 */
+  onStep?: (step: ReActStep) => void;
 }
 
 export async function runScenario(
@@ -43,7 +45,7 @@ export async function runScenario(
     const login = await registry.execute("auth_login", {}, ctx);
     if (!login.ok) throw new Error(`登录失败：${login.summary}`);
 
-    const react = await runReactLoop(ctx, scenario, { maxSteps: opts.maxSteps ?? 20 });
+    const react = await runReactLoop(ctx, scenario, { maxSteps: opts.maxSteps ?? 20, onStep: opts.onStep });
     // 独立判官：场景 + 轨迹（含每步观察）+ 最终观察
     const verdict = await judgeScenario(scenario, react);
     return {

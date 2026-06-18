@@ -11,6 +11,8 @@ import type { ReActRunResult, ReActStep } from "./types";
 
 export interface RunReactLoopOptions {
   maxSteps?: number;
+  /** 每步完成后回调（前端 SSE 实时轨迹用）。 */
+  onStep?: (step: ReActStep) => void;
 }
 
 export async function runReactLoop(
@@ -47,6 +49,7 @@ export async function runReactLoop(
     // 无 tool_call → 模型自行收尾
     if (toolCalls.length === 0) {
       steps.push({ step, thought });
+      opts.onStep?.(steps[steps.length - 1]!);
       return finalize(false, false, steps, ctx, thought.slice(0, 300));
     }
 
@@ -84,6 +87,7 @@ export async function runReactLoop(
         trace: result.trace,
         ok: result.ok,
       });
+      opts.onStep?.(steps[steps.length - 1]!);
 
       if (result.done) {
         return finalize(true, false, steps, ctx, result.summary);

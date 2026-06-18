@@ -187,7 +187,7 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 - [x] 初始化本项目 git 仓库并关联远程：<https://github.com/Tm-Ys/4gaboards_agent_plus.git>
 - [x] 任务一：功能点提取 + 结构化测试场景生成（长上下文直填；Python 原型 `scenario_generator/` + TS 移植 `app/`）。
 - [ ] 任务一：功能点 / 测试场景的可视化展示（TS + Node）—— 暂缓。
-- [~] 任务二：ReAct 智能体（规划/记忆/执行/验证）对 `demo.4gaboards.com` 执行测试。**P0–P3 + P1.5 + P4 + 领域工具扩展 + card 工具补全已完成**：基线 43% → settings 簇 68% → **P4 健壮性**（state 隔离 / 命名空间清理 / 拖拽 `card_drag`）+ **领域工具扩展**（A 层 8→18 工具）+ **card 工具补全**（A 层 18→**20**：`card_manage_labels` toggle/create/edit、`card_text_editor` switch_mode/resize/help）。card 补全五场景 **3/5**（switch-modes / resize / manage-labels-2 PASS）。+ **P5 变异测试**（Layer1 spec-sensitivity≈0% / Layer2 Mutation Score 33%）+ **P6 判官加固**（strict 判官变体 + 宽松代价三角：Layer1 lenient 0%→strict 57%，真实 PASS 率 46%→25%、strict 误杀 7）。下一步前端。
+- [~] 任务二：ReAct 智能体（规划/记忆/执行/验证）对 `demo.4gaboards.com` 执行测试。**P0–P3 + P1.5 + P4 + 领域工具扩展 + card 工具补全已完成**：基线 43% → settings 簇 68% → **P4 健壮性**（state 隔离 / 命名空间清理 / 拖拽 `card_drag`）+ **领域工具扩展**（A 层 8→18 工具）+ **card 工具补全**（A 层 18→**20**：`card_manage_labels` toggle/create/edit、`card_text_editor` switch_mode/resize/help）。card 补全五场景 **3/5**（switch-modes / resize / manage-labels-2 PASS）。+ **P5 变异测试**（Layer1 spec-sensitivity≈0% / Layer2 Mutation Score 33%）+ **P6 判官加固**（strict 判官变体 + 宽松代价三角：Layer1 lenient 0%→strict 57%，真实 PASS 率 46%→25%、strict 误杀 7）+ **可视化前端**（牛皮纸看板控制台：Vite+React+Hono SSE，三列 catalog/Run 实时轨迹/mutation+宽松代价三角，实测 board-create Run 6 步 PASS）。**任务二全栈完成。**
 - [ ] 任务二（提升档）：场景变异与典型应用错误识别。
 
 ---
@@ -269,3 +269,15 @@ cd app && npm install && cd ..                    # TS 主程序（生成 + Agen
 - 代码：`verify/judge.ts` + `mutation/{runMutation,runMutationTrace,report}` + `cli/{run-mutation,run-judge-cost}` + `llm.ts`。CLI `npm run run-mutation -- --judge both` / `npm run run-judge-cost -- --batch <report>`。
 
 **结论**：宽松判官（lenient）高通过率但零规约敏感（Layer1 0%）；严格判官（strict）有规约敏感（Layer1 must-kill 38%）但误杀真实通过（-21pp）——这张 trade-off 三角表就是「宽松代价」的量化交付，对应评分标准「结果验证」提升档。
+
+---
+
+## 前端可视化（2026-06-18）
+
+牛皮纸看板控制台（答辩演示用），`app/web/`（Vite + React + TS）+ `app/server/`（Hono SSE 后端，复用现有 TS 函数、不 shell CLI）。
+
+- **三列看板**：任务一 catalog（搜索/选择）· 任务二 Run 实时轨迹 + batch 报告 · 任务三 mutation 报告（三结构分支解析）+ judge-cost 宽松代价三角。
+- **牛皮纸皮肤**：暖黄牛皮纸底 + 衬线 Source Serif 标题 + Claude 橘土点缀，用 `web-design-engineer` skill（ConardLi/garden-skills）。
+- **Run 实时轨迹（答辩高潮）**：`runReactLoop` 加 `onStep` 回调 → SSE 推每步 → 前端 Timeline 逐条冒出 + VerdictBadge。实测 board-create：6 步 PASS（observe → click Add Board → board_create 一步创建 → confirm → done）。
+- **全局锁**：demo 单账号串行，并发触发 409。
+- 启动：`cd app && npm run dev` → http://localhost:5173。仅 `loop.ts` + `runScenario.ts` 加 onStep 两处改动，其余全新增。

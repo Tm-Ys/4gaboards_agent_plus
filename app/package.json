@@ -14,10 +14,14 @@
     "run-batch": "tsx src/agent/cli/run-batch.ts",
     "run-mutation": "tsx src/agent/cli/run-mutation.ts",
     "run-judge-cost": "tsx src/agent/cli/run-judge-cost.ts",
-    "typecheck": "tsc --noEmit"
+    "dev:server": "tsx watch server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "typecheck:server": "tsc -p server/tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@hono/node-server": "^2.0.5",
     "dotenv": "^17.4.2",
+    "hono": "^4.12.26",
     "openai": "^6.42.0",
     "playwright": "^1.60.0",
     "undici": "^8.4.1",
@@ -25,6 +29,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.9.3",
+    "concurrently": "^10.0.3",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }

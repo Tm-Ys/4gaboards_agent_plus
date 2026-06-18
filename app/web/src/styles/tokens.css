@@ -1,0 +1,39 @@
+/* 牛皮纸设计令（Claude 牛皮纸皮肤）。
+ * 暖黄牛皮纸底 + 墨色文字 + Claude 橘土点缀 + 衬线标题。
+ * custom recipe：25 个 style-recipes 无完全对应者，最接近 stripe-press（暖人本·衬线出版），
+ * 在此基础上加牛皮纸纹理 + 橘土强调。 */
+:root {
+  /* 牛皮纸底（暖黄分层） */
+  --paper-bg: #f4ead5;
+  --paper-card: #faf3e0;
+  --paper-card-alt: #efe2c4;
+  --paper-edge: #d9c79a;
+  --paper-shadow: rgba(120, 92, 40, 0.12);
+
+  /* 墨色文字梯度 */
+  --ink-900: #2b2418;
+  --ink-700: #4a4030;
+  --ink-500: #6b5d44;
+  --ink-300: #9a8c6e;
+
+  /* Claude 橘土（强调/状态） */
+  --clay: #d97757;
+  --clay-deep: #b85c3e;
+  --clay-soft: #f0d9cc;
+
+  /* 状态色（克制，与牛皮纸和谐） */
+  --ok: #6b8e4e; /* PASS 橄榄绿 */
+  --bad: #b5483f; /* FAIL 砖红 */
+  --warn: #c08a3e; /* 存活/误杀 赭石 */
+
+  /* 字体：标题衬线 / 正文无衬线 / 代码等宽 */
+  --font-serif: "Source Serif 4", "Source Han Serif SC", "Noto Serif SC", Georgia, serif;
+  --font-sans: "Inter", "PingFang SC", "Helvetica Neue", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+
+  /* 间距/圆角 */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --gap: 16px;
+  --col-w: 380px;
+}
