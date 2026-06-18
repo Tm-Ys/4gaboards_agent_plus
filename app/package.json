@@ -15,6 +15,10 @@
     "run-mutation": "tsx src/agent/cli/run-mutation.ts",
     "run-judge-cost": "tsx src/agent/cli/run-judge-cost.ts",
     "dev:server": "tsx watch server/index.ts",
+    "dev:web": "npm -C web run dev",
+    "dev": "concurrently -n server,web -c blue,magenta \"npm:dev:server\" \"npm:dev:web\"",
+    "build": "npm -C web run build",
+    "preview": "tsx server/index.ts",
     "typecheck": "tsc --noEmit",
     "typecheck:server": "tsc -p server/tsconfig.json --noEmit"
   },
