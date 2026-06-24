@@ -11,8 +11,8 @@
 skills-lock.json
 
 # ===== 只读参考仓库（各自有上游，非本项目交付物）=====
-/4gaBoards/
-/4gaBoardsDocs/
+4gaBoards/
+4gaBoardsDocs/
 
 # ===== Python =====
 __pycache__/

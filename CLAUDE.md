@@ -231,7 +231,7 @@ npm run dev                              # 前端控制台（vite 5173 + hono 87
 - **分期**：① 先做只读牛皮纸看板外壳（catalog + 已有报告）锁样式；② 再加 Node 后端 + SSE + Run 按钮做交互。
 - **Skill**：前端 build 用 `ConardLi/garden-skills` 的 **`web-design-engineer`**（HTML/CSS/JS/React 出「惊艳级」页面，自带 style-recipes 风格锚点，适合定制牛皮纸看板皮肤；装法：作为 plugin 加到 `.claude/`）；精美 HTML 报告可备用 `beautiful-article`。
 
-**之后**（可选增强）：① 前端实时变异/judge-cost 交互 route（演示用已有报告足够，当前未做）；② strict 判官加固 negate 类（仍 0%）、Layer2 both 全量验证；③ manage-labels-1 edit-rename、open-help popup 替代；④ 答辩视觉打磨（看 5173 后微调）。
+**之后**（可选增强）：① ~~前端实时变异/judge-cost 交互 route~~ ——**变异实时 route 已做**（`/api/mutation` SSE + `MutationLauncher` + `useMutation`），judge-cost 实时未做（演示用已有报告加载足够）；② strict 判官加固 negate 类（已加 STRICT「否定强矛盾」prompt 段，待验证；Layer2 `--judge both` 代码就绪、待全量跑）；③ manage-labels-1 edit-rename、open-help popup 替代；④ 答辩视觉打磨（看 5173 后微调）。
 
 **已知问题（非工具缺陷）**：
 - 弱网下批量 `page.goto` 登录/清理偶发 60s 超时；cleanup 语言恢复在弱网下脆弱。

@@ -891,7 +891,7 @@ registry.register({
   name: "card_menu_action",
   layer: "A",
   description:
-    "点卡片省略号(Edit Card)菜单的某一项：copy_link(复制链接)/check_activity(查看活动)/duplicate(复制卡片)/move(移动卡片)/delete(删除卡片)/edit_members(编辑成员)/edit_labels(编辑标签)/edit_due_date(编辑到期)/edit_timer(编辑计时器)/edit_name(编辑名称)。驱动真实 UI：看板视图 hover 卡片显示省略号 → 点 Edit Card → 点菜单项。card 名自动加 namespace 前缀。copy_link/check_activity/duplicate 一步完成；edit_*/move/delete 点开后打开对应子面板（后续用 browser_click 或专用工具完成）。",
+    "当场景涉及【复制链接/查看活动/复制卡片/移动/删除卡片】等卡片菜单操作时，【优先用本工具】一步完成，不要用 browser_click 手动 hover 卡片→点 Edit Card→点菜单项（多步易在浮层上失败）。点卡片省略号(Edit Card)菜单的某一项：copy_link(复制链接)/check_activity(查看活动)/duplicate(复制卡片)/move(移动卡片)/delete(删除卡片)/edit_members(编辑成员)/edit_labels(编辑标签)/edit_due_date(编辑到期)/edit_timer(编辑计时器)/edit_name(编辑名称)。驱动真实 UI：看板视图 hover 卡片显示省略号 → 点 Edit Card → 点菜单项。card 名自动加 namespace 前缀。copy_link/check_activity/duplicate 一步完成；edit_*/move/delete 点开后打开对应子面板（后续用 browser_click 或专用工具完成）。",
   params: z.object({
     cardName: z.string().min(1).describe("卡片标题（工具自动加 namespace 前缀）"),
     item: z
