@@ -1,0 +1,79 @@
+{
+  "description": "全局基线路径。P0 不可逆（只跑一次），P1 可重跑（清理后重建）。",
+  "p0": [
+    {
+      "tool_name": "auth_login",
+      "purpose": "建立登录态"
+    }
+  ],
+  "p1": [
+    {
+      "scenario_id": "project-create-1",
+      "feature_id": "project-create",
+      "purpose": "创建项目容器",
+      "params": {
+        "projectName": "Project"
+      },
+      "namespace": true
+    },
+    {
+      "scenario_id": "board-create-happy-path",
+      "feature_id": "board-create",
+      "purpose": "创建看板",
+      "params": {
+        "boardName": "Board",
+        "projectName": "Project",
+        "template": "Empty"
+      },
+      "namespace": true
+    },
+    {
+      "scenario_id": "list-create-1",
+      "feature_id": "list-create",
+      "purpose": "创建列表 1",
+      "params": {
+        "listName": "List-A"
+      },
+      "namespace": true
+    },
+    {
+      "scenario_id": "list-create-1",
+      "feature_id": "list-create",
+      "purpose": "创建列表 2",
+      "params": {
+        "listName": "List-B"
+      },
+      "namespace": true
+    },
+    {
+      "scenario_id": "card-create-happy-path",
+      "feature_id": "card-create",
+      "purpose": "在 List-A 创建卡片 1",
+      "params": {
+        "cardTitle": "Card-1",
+        "listName": "List-A"
+      },
+      "namespace": true
+    },
+    {
+      "scenario_id": "card-create-happy-path",
+      "feature_id": "card-create",
+      "purpose": "在 List-A 创建卡片 2",
+      "params": {
+        "cardTitle": "Card-2",
+        "listName": "List-A"
+      },
+      "namespace": true
+    },
+    {
+      "scenario_id": "card-create-happy-path",
+      "feature_id": "card-create",
+      "purpose": "在 List-B 创建卡片 3",
+      "params": {
+        "cardTitle": "Card-3",
+        "listName": "List-B"
+      },
+      "namespace": true
+    }
+  ]
+}
