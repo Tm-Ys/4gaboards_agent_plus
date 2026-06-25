@@ -20,6 +20,7 @@ import {
   type FeaturePoint,
   type ScenarioCatalog,
 } from "./schemas";
+import { DependencyGraph } from "./agent/dependencyGraph";
 
 const BASELINE_P0_TOOL = "auth_login";
 const BASELINE_P1_FEATURE_IDS = new Set([
@@ -204,6 +205,36 @@ function baselineTagsFile(): BaselineTagsFile {
   };
 }
 
+function validateOutputs(
+  features: FeatureCatalog,
+  scenarios: ScenarioCatalog,
+  taggedScenarioIds: string[],
+): void {
+  const graph = new DependencyGraph(features.feature_points);
+  if (!graph.validateNoCycles()) {
+    throw new Error("LLM 推理结果存在依赖环，拒绝写入 features.json");
+  }
+
+  if (taggedScenarioIds.length !== BASELINE_P1_FEATURE_IDS.size) {
+    throw new Error(
+      `baseline/P1 happy_path 数量异常：期望 ${BASELINE_P1_FEATURE_IDS.size}，实际 ${taggedScenarioIds.length}`,
+    );
+  }
+  for (const featureId of BASELINE_P1_FEATURE_IDS) {
+    const tagged = scenarios.scenarios.filter(
+      (scenario) =>
+        scenario.feature_id === featureId &&
+        scenario.tags.includes("happy_path") &&
+        scenario.tags.includes("baseline/P1"),
+    );
+    if (tagged.length !== 1) {
+      throw new Error(
+        `功能点 ${featureId} 的 baseline/P1 happy_path 应恰好 1 个，实际 ${tagged.length}`,
+      );
+    }
+  }
+}
+
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const basicDir = path.join(settings.outputsDir, "basic");
@@ -249,6 +280,11 @@ async function main(): Promise<void> {
   const inferred = parseInference(data, featureIds);
   const updatedFeatures = updateFeatures(featureCatalog, inferred);
   const updatedScenarios = updateScenarioTags(scenarioCatalog);
+  validateOutputs(
+    updatedFeatures,
+    updatedScenarios.catalog,
+    updatedScenarios.tagged,
+  );
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(
