@@ -10,6 +10,7 @@
   "scripts": {
     "extract": "tsx src/extractFeatures.ts",
     "scenarios": "tsx src/generateScenarios.ts",
+    "infer-deps": "tsx src/inferDependencies.ts",
     "run-scenario": "tsx src/agent/cli/run.ts",
     "run-batch": "tsx src/agent/cli/run-batch.ts",
     "run-mutation": "tsx src/agent/cli/run-mutation.ts",
