@@ -56,7 +56,7 @@
 4. **大模型用国产**：首选 **DeepSeek V4 Flash**（`.env` `DEEPSEEK_MODEL=deepseek-v4-flash`，OpenAI 兼容接口）；备选 GLM-4.6V / 4.7、Qwen3-VL-Plus、DeepSeek V3。
 5. **语言分工（已更新）**：
    - **TypeScript（`app/`）= 主交付程序**：任务一生成逻辑已从 Python 移植至此；**任务二 Agent（ReAct + 浏览器自动化）与前端可视化也在此实现**。`app/src/schemas.ts`（zod）是前端 / 生成 / Agent 三方共享的类型契约。
-   - **Python（`scenario_generator/`）= 已验证原型**：prompt 与 JSON schema 与 `app/` 完全一致、产物互通，保留作参考与快速实验。
+   - **Python（`scenario_generator/`）= 已验证原型**：prompt 与 JSON schema 与 `app/` 完全一致、产物互通，保留作参考与快速实验。**Python 包管理必须用 `uv`**（不得用 pip/conda/poetry），工作流：`uv venv && source .venv/bin/activate && uv pip install -e .`。如本地无 uv：`curl -LsSf https://astral.sh/uv/install.sh | sh`。
    - 本机联网需走本地代理：Python 加 `httpx[socks]`；Node 用 `undici` `ProxyAgent` 包自定义 fetch 注入 openai SDK（见 `app/src/http.ts`），**注意 undici 不支持 socks，取 `HTTPS_PROXY` 而非 `all_proxy`**。
 
 ---
@@ -192,67 +192,72 @@ npm run dev                              # 前端控制台（vite 5173 + hono 87
 
 ## 🔜 下次接着做（handoff）
 
-**当前位置**：**可视化前端已完成**（2026-06-18）。牛皮纸看板控制台（Vite+React+Hono SSE），三列：任务一 catalog / 任务二 Run 实时轨迹+batch / 任务三 mutation+宽松代价三角。`npm run dev` → http://localhost:5173，实测 board-create Run SSE 6 步 PASS（high）。前端复用现有 TS（`loadScenarioSet`/`runScenario`(+onStep)/`runMutation`/`judgeScenario`），仅 `loop.ts`+`runScenario.ts` 加 onStep。**任务二 P0–P6 + 前端，全栈完成。**
+**当前位置（2026-06-25）**：**Task1/Task2 增强方案已定稿**——原子操作依赖关系标注 + Baseline 基线路径。讨论全部完成，`todo.md` 已写出（两人分工方案），待开工。
 
-**P4 健壮性（已完成）**：① 状态隔离 `resetAccountLanguage`（每场景恢复英文，settings 簇 68%→84%）；② 命名空间 + REST 清理 `cleanupTestProjects`（按 `${ns}-` 前缀删 board/project）；③ 拖拽 `card_drag`（react-beautiful-dnd mouse 多步 move，非 click/dragAndDrop）。
+### 背景：为什么要做
 
-**领域工具扩展（已完成，A 层 8→18）**：
-- card/view 前置+编辑：`card_open`（开详情 `/cards/:id`）、`view_switch`（board/list，DOM 特征判态非 URL）、`card_edit_description`（md-editor Save/Ctrl+Enter）。
-- list 簇列操作：`list_view_menu_action`（Ellipsis 菜单 fit_content/fit_screen/...）、`list_view_toggle_column`（原生 checkbox setChecked 幂等）、`list_view_sort`（三态循环，sortDescFirst 因列而异）。
-- card 详情：`card_menu_action`（省略号菜单 copy_link/check_activity/duplicate/...）、`card_edit_title`、`card_manage_comments`、`card_toggle_section`。
-- helper：`namespaced`/`ensureCardOpen`/`ensureListView`/`ensureBoardView`/`closeCardModalIfOpen`/`isListView`（抽自 board_open/card_create 双回退模式）。CLI `--feature` 改前缀匹配。
+Task1 的 118 个 FeaturePoint 是**扁平的**——没有跨功能点的依赖关系。`board_delete` 需要先有看板，但 FeaturePoint 里没有 `prerequisite_feature_ids` 指向 `board_create`。Task2 跑大批场景时 Agent 频繁因缺前置状态而失败。
 
-**card 工具补全（已完成，A 层 18→20）**：补齐 manage_labels / text_view 两个簇。
-- `card_manage_labels`（toggle/create/edit）：4gaBoards 标签是**彩色按钮**（选中=nameActive 类，非 checkbox）；弹层搜索框占位符实测 `"Search labels or create one..."`；标签项定位用 `button[title="<name>"]`（recon 实测 title=标签名，比 role name 稳）；toggle 选中态经 **socket 往返**更新，需**轮询 ~4s** 读 class 变化（弱网下 700ms 不够）；create 后标签自动选中。
-- `card_text_editor`（switch_mode/resize/help）：@uiw/react-md-editor@4。模式由根节点 class 指示 `w-md-editor-show-edit/live/preview`，全屏根/body 带 fullscreen 类；**Ctrl+7/8/9/0 在本版本未绑定**（工具栏只有 Ctrl+1~6 标题）→ 改点**工具栏右侧模式按钮**（extraCommands，title 含 edit/live/preview/full）；resize 手柄=`.w-md-editor-bar`（cursor s-resize，docs 称"右下角三圆点"）；help 按钮 title="Open help"。
-- helper：抽 `enterDescriptionEdit`（card_edit_description 复用）、`readEditorMode`（读根 class）。
-- 五场景验证：text-view-switch-modes ✅、text-view-resize ✅、manage-labels-2 ✅、**open-help ❌**（@uiw `commands.help` 的 window.open 在 headless 不产生 Playwright 可追踪 popup，环境受限，类比 instance demoMode）、**manage-labels-1 ❌**（复杂 medium 多步编排，create/toggle 已可用但全序列+rename 对 agent 偏难）。
+### 方案核心设计
 
-**P5 变异测试（已完成，2026-06-18）**——给独立判官打分（被测=判官，app 恒正确）：
-- **Layer1 场景级（改 expectation，真跑正确 app，重判官）= spec-sensitivity ≈ 0%**。判官无视 expectation、靠 title+steps+trace 推断核心目标；把 title+desc+expectation+steps **整体**改成另一目标（goal-level）也 0/3 全存活，且会**主动推翻亲眼看到的 spec 矛盾**（Simple vs Kanban：判官自述「实际选了 Simple 而非指定的 Kanban，但核心目标达成」）。
-- **Layer2 轨迹级（往真实轨迹注入故障、用原场景重判官）= 3/9 (33%)**。判官做**多源证据和解**：单个失败步骤会被幸存证据救回（card-create 自述「card_create 首次失败，但列表 Open 卡片数 2→3，创建成功」；notifications「步骤3点击失败被后续弥补」）。分化：薄证据/单动作（list-sort/settings-theme/sidebar-toggle）**100% killed**；富证据/多步（board/card/view/notifications）**0%**。按算子 exec-failure 3/7、layout-missing 0/2；semantic-flip 因 finalObs 多英文/符号 AX 树、中文状态 token 难命中而少触发。
-- 结论：判官「**不查规约、查行为；且行为故障检出依赖证据是否冗余**」——富证据场景要全通道失败才 FAIL。
-- 代码 `app/src/agent/mutation/`（operators/mutants=Layer1，traceFaults/runMutationTrace=Layer2，runMutation/report 共用）；CLI `npm run run-mutation -- --layer spec|trace [--scenario|--feature|--limit]`。报告落 `app/outputs/mutation/`（gitignored）。
+**1. FeaturePoint 加 `prerequisite_feature_ids`（一次 LLM 推理）**
 
-**P6 判官加固·strict 变体（已完成，2026-06-18）**——量化宽松代价：
-- **strict 判官**（`judge.ts` 加 `JudgeMode`：逐条核对 expectation + 终态优先历史不救 + must-have/nice-to-have 分类 + 状态可表达性降级 + 跨语言强映射），与既有 lenient 并存，默认 lenient 不破坏既有行为。
-- **Layer1 board-create both 实测**：lenient **0/14（must-kill 0%）** → strict **8/14（must-kill 38%）**。按算子 entity-swap 0→67%、state-swap 0→100%、soft(keyword/feature) 0→75-100%；**negate 0→0%（strict 弱点，取反类仍漏，待 prompt 调优）**。
-- **宽松代价（30 场景零浏览器重判）**：真实 PASS 率 lenient 46% / strict 25%，**strict 误杀 7 个真实通过（-21pp）**。误杀里 ~2 个是真问题（board-view-toggle 终态视图、board-export-csv 操作路径偏离）、~5 个 strict 太严（headless 下载无 UI 提示 / 终态本就该关 / demo 无数据）。
-- **`--judge both`**：runner 加 `baselineOverride` 复用基线 trace（浏览器只跑一次、判官跑两遍）；`report.ts` 加 `compareJudges`（strict-only kills = 宽松漏检锚点）。
-- **健壮性修复**：DeepSeek 偶发畸形 JSON 曾让 `--judge both`（调用翻倍）整批崩 → `chatJson` 加 3 次重试 + 变异体/故障循环单条容错（跳过失败项不崩、不丢已跑结果）。
-- 代码：`verify/judge.ts`(JudgeMode/STRICT prompt) + `mutation/{runMutation,runMutationTrace}`(judgeMode/baselineOverride 透传) + `mutation/report.ts`(compareJudges/JudgeComparison) + `cli/run-mutation.ts`(--judge both) + `cli/run-judge-cost.ts`(宽松代价三角，零浏览器) + `llm.ts`(chatJson 重试)。
+`schemas.ts` 的 `FeaturePointSchema` 新增 `prerequisite_feature_ids: z.array(z.string()).default([])`。新建 `inferDependencies.ts`：读全部 118 个 FP 一次性喂给 LLM，推理每个 FP 依赖哪些前置 FP。产出更新后的 `features.json`（静态元数据，Task2 直接读，不重复调 LLM）。
 
-**前端组织方案（2026-06-18 定型 → ✅ 已实现，见 `app/web/`+`app/server/`）**：
-- **定位**：交互控制台——浏览任务一 catalog、触发并实时看任务二场景执行（ReAct 轨迹）、触发并看 P5 变异分数；答辩演示用。
-- **栈**：Vite + React + TS（前端）+ Node 后端（Hono，SSE 流式进度），复用现有 TS 函数、不 shell CLI。
-- **视觉**：看板风结构（三列 任务一 / 任务二 / P5，每场景一张卡，贴合被测 4gaBoards）+ **Claude 牛皮纸皮肤**（暖黄牛皮纸底 + 衬线细字体 + Claude 橘土点缀）。
-- **复用点**：`loadScenarioSet`（catalog，已入库 basic）、`runScenario`（需给 `runReactLoop` 加 `onStep` 回调，唯一要改的现有代码）、`runMutation`/`runMutationTrace`（已有 `onMutant`/`onScenario`/`onFault` 可直接喂 SSE）、读 `outputs/runs` + `outputs/mutation` 已有报告。
-- **约束**：单账号串行（全局 in-flight 锁，并发 409）；运行真改 demo 站数据（runner 已含 namespace 清理）；批量（30 场景 ~1h）只支持加载已有报告、不实时跑。
-- **分期**：① 先做只读牛皮纸看板外壳（catalog + 已有报告）锁样式；② 再加 Node 后端 + SSE + Run 按钮做交互。
-- **Skill**：前端 build 用 `ConardLi/garden-skills` 的 **`web-design-engineer`**（HTML/CSS/JS/React 出「惊艳级」页面，自带 style-recipes 风格锚点，适合定制牛皮纸看板皮肤；装法：作为 plugin 加到 `.claude/`）；精美 HTML 报告可备用 `beautiful-article`。
+**2. 双层 Tag 体系：Baseline（全局基线）**
 
-**之后**（可选增强）：① ~~前端实时变异/judge-cost 交互 route~~ ——**变异实时 route 已做**（`/api/mutation` SSE + `MutationLauncher` + `useMutation`），judge-cost 实时未做（演示用已有报告加载足够）；② strict 判官加固 negate 类（已加 STRICT「否定强矛盾」prompt 段，待验证；Layer2 `--judge both` 代码就绪、待全量跑）；③ manage-labels-1 edit-rename、open-help popup 替代；④ 答辩视觉打磨（看 5173 后微调）。
+现有 tag：`happy_path` / `variant` / `edge_case` / `error_handling`。新增 baseline 标记：
+- `baseline/P0`：不可逆操作，整个 session 只跑一次（`auth_login`）
+- `baseline/P1`：可重跑的资源创建（`project_create` → `board_create` → `list_create×2` → `card_create×3`）
 
-**已知问题（非工具缺陷）**：
-- 弱网下批量 `page.goto` 登录/清理偶发 60s 超时；cleanup 语言恢复在弱网下脆弱。
-- 判官严格性：card-delete-via-bin（按 Delete 键 vs 点 bin 图标）、open-card-by-clicking-row（抓"点行空白区"操作方式）——核心目标其实达成。
-- card 簇剩余 FAIL：open-help（环境受限）、manage-labels-1（复杂 medium）、view-activity-comment(波形图标)、card-edit-title/copy-link/check-activity（agent 未调用已有工具，编排问题非工具缺陷）。
+P1 资源名用 `happy_path_yyyymmdd_hhmm` 前缀。`baseline.json` 定义基线场景引用序列（不是新场景，是引用现有 scenarios.json 中的场景 id）。
 
-**别忘的关键约束**：① 工具驱动真实 UI、不走后端 API（API 仅前置/清理）；② 工具名只能 `[a-zA-Z0-9_-]`（用下划线）；③ 判官证据不要截断（DeepSeek 上下文充裕）；④ 多步工具用 trace 回报中间观察，否则判官看不到中间态；⑤ 卡片/列表根 observation 看不到（无 role），必须语义 selector（`[class*="Card_name"][title]` 等）。
+**3. 执行模型**
 
----
+```
+session 开始:
+  run(baseline/P0) → 登录
+  run(baseline/P1) → 建项目 + 看板 + 2 列表 + 3 卡片 → 停在 board-view
+  DOM pre-check: 页面已有 happy_path_* 资源？是 → 跳过 P1
+  run(board_edit)   → 直接测（看板已在页面上）
+  run(card_move)    → 直接测（卡片已在页面上）
+  ...
+  run(board_delete) → 链条末尾，删后不留残
+session 结束: REST API 清理全部 baseline 资源
+```
 
-## 当前状态（2026-06）
+**不需要的**：图数据库（118 节点用内存邻接表）、Buffer 层（页面即状态）、新实体类型（FeaturePoint 粒度已够）、新 `category` 字段（`module` 已是分类轴）。
+
+**4. 新增文件（待实现）**
+
+| 文件 | 说明 | 归属 |
+|------|------|------|
+| `inferDependencies.ts` | LLM 推理依赖 + baseline 打标 | 甲 |
+| `dependencyGraph.ts` | 邻接表 DAG（拓扑排序、传递闭包） | 甲 |
+| `outputs/basic/baseline.json` | 基线场景引用序列 | 甲 |
+| `runner/runBaseline.ts` | P0/P1 执行 + DOM pre-check | 乙 |
+| 改 `runner/runScenario.ts` | 增加 `autoSetup` 选项 | 乙 |
+| 改 `runner/runBatch.ts` | 增加 `--module` 按元件跑链条 | 乙 |
+
+**5. 详细设计 → `todo.md`**
+
+完整方案、分工细则、prompt 模板、伪代码均在 [`todo.md`](todo.md)。两人分工：甲做数据层（schema + LLM 推理 + DAG + baseline.json），乙做执行层（runner + CLI）。
+
+### 当前状态（2026-06）
 
 - ✅ 收集参考源码与文档；核心方向已定。
-- ✅ 任务一完成：`scenario_generator/`（Python 原型）+ `app/`（TS 移植，schema 互通）。功能点提取 + 测试场景生成均已跑通（长上下文直填）。
-- ✅ 固化默认场景集 `basic`（`app/outputs/basic/`，179 场景）+ `scenarioStore.ts` 默认路由，任务二无需每次重新生成。
-- ✅ 仓库已 `git init`、推送至 `origin/main`；`.env`/参考仓库/产物均已 gitignore。
-- ✅ 任务二 P0–P3 + P1.5 + **P4 完成**：ReAct Agent + 独立 LLM 判官 + 批量 harness + 健壮性地基。
-- ✅ **P4 健壮性（2026-06-15/16）**：① 状态隔离（`resetAccountLanguage` 每场景恢复英文）；② 命名空间 + REST 清理（`cleanupTestProjects` 按前缀删 board/project）；③ 拖拽工具 `card_drag`（rbd mouse 多步 move）。settings 簇 68%→84%。
-- ✅ **领域工具扩展**：A 层 8→**18 工具**。新增 card_open/view_switch/card_edit_description（card/view 簇前置+编辑）、list_view_menu_action/toggle_column/sort（list 簇列操作）、card_menu_action/edit_title/manage_comments/toggle_section（card 详情菜单/编辑）。CLI `--feature` 改前缀匹配。三簇验证：view 3/4、list-view 4/6、card 10/21（含网络异常）。
-- ✅ **card 工具补全（2026-06-16）**：A 层 18→**20 工具**。新增 `card_manage_labels`（toggle/create/edit，彩色按钮+socket 轮询）与 `card_text_editor`（switch_mode/resize/help，工具栏模式按钮+.w-md-editor-bar）。抽 `enterDescriptionEdit`/`readEditorMode` helper。五场景验证 **3/5**：switch-modes / resize / manage-labels-2 PASS；open-help（环境受限）/ manage-labels-1（复杂 medium）FAIL。
-- ✅ **P5 变异测试（2026-06-18）**：Layer1 改 expectation→spec-sensitivity≈0%（判官靠核心目标推断、无视 expectation）；Layer2 注入 trace 故障→Mutation Score **3/9 (33%)**（薄证据场景 100%、富证据 0%，判官多源证据和解）。代码 `app/src/agent/mutation/`，CLI `run-mutation --layer spec|trace`。
-- ✅ **P6 判官加固·strict 变体（2026-06-18）**：strict 判官（逐条核对+终态优先+must-have/nice-to-have 分类），`--judge both` 两判官对比。Layer1 board-create lenient 0%→strict 57%（must-kill 0→38%，negate 仍 0% 弱点）；宽松代价 lenient 46%/strict 25%，strict 误杀 7 个真实通过（-21pp）。修 `chatJson` 重试 + 循环容错。代码 `verify/judge.ts`+`mutation/*`+`cli/{run-mutation,run-judge-cost}`+`llm.ts`，CLI `run-mutation --judge both` / `run-judge-cost`。
-- ✅ **可视化前端（2026-06-18）**：牛皮纸看板控制台（Vite+React+Hono SSE，`app/web/`+`app/server/`）。三列：catalog / Run 实时轨迹（onStep SSE）+ batch / mutation 三结构 + judge-cost 三角。`npm run dev`→5173。实测 board-create Run 6 步 PASS。仅 `loop.ts`+`runScenario.ts` 加 onStep，余皆新增。
-- ⚠️ 已知：弱网下批量 `page.goto` 登录/清理偶发超时（非工具缺陷）；open-help 受 @uiw window.open 限制；manage-labels-1 复杂 medium 待编排优化；P5 Layer2 的 semantic-flip 偶发不触发（finalObs 多英文/符号 AX 树，中文状态 token 难命中）、layout-missing 仅创建类场景适用（需 namespace 资源在 finalObs）。
+- ✅ 任务一完成：功能点提取 + 测试场景生成均已跑通（长上下文直填）。
+- ✅ 固化默认场景集 `basic`（179 场景 / 118 功能点）。
+- ✅ 任务二 P0–P6 全栈完成：ReAct Agent + 独立 LLM 判官 + 批量 harness + 健壮性 + 变异测试 + 前端牛皮纸控制台。
+- ✅ **Task1/Task2 增强方案已定稿**（2026-06-25）：依赖关系 + Baseline 基线，`todo.md` 已出，待开工。
+- ⚠️ 已知：弱网批量偶发超时；open-help 环境受限；manage-labels-1 编排偏难。
+
+### 别忘的关键约束
+
+1. 工具驱动真实 UI、不走后端 API（API 仅前置/清理）
+2. 工具名只能 `[a-zA-Z0-9_-]`（用下划线）
+3. 判官证据不要截断（DeepSeek 上下文充裕）
+4. 多步工具用 trace 回报中间观察
+5. `4gaBoards/`、`4gaBoardsDocs/` 只读参考，不修改不复用
+6. `.env` 绝不提交；Python 必须 `uv`；TypeScript 全部 `tsx` 直接执行
+7. 卡片/列表根 observation 看不到（无 role），必须语义 selector
