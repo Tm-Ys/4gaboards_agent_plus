@@ -1318,7 +1318,8 @@
       ],
       "difficulty": "easy",
       "tags": [
-        "happy_path"
+        "happy_path",
+        "baseline/P1"
       ]
     },
     {
@@ -3330,7 +3331,8 @@
       ],
       "difficulty": "easy",
       "tags": [
-        "happy_path"
+        "happy_path",
+        "baseline/P1"
       ]
     },
     {
@@ -4049,7 +4051,8 @@
       ],
       "difficulty": "medium",
       "tags": [
-        "happy_path"
+        "happy_path",
+        "baseline/P1"
       ]
     },
     {
@@ -4847,7 +4850,8 @@
       ],
       "difficulty": "easy",
       "tags": [
-        "happy_path"
+        "happy_path",
+        "baseline/P1"
       ]
     },
     {

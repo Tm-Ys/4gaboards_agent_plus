@@ -1,0 +1,30 @@
+{
+  "description": "Baseline 标签索引。P0 登录由 auth_login 领域工具执行；P1 条目关联 FeaturePoint 的 happy_path 场景。",
+  "entries": [
+    {
+      "id": "auth_login",
+      "kind": "tool",
+      "tag": "baseline/P0"
+    },
+    {
+      "id": "project-create",
+      "kind": "feature",
+      "tag": "baseline/P1"
+    },
+    {
+      "id": "board-create",
+      "kind": "feature",
+      "tag": "baseline/P1"
+    },
+    {
+      "id": "list-create",
+      "kind": "feature",
+      "tag": "baseline/P1"
+    },
+    {
+      "id": "card-create",
+      "kind": "feature",
+      "tag": "baseline/P1"
+    }
+  ]
+}

@@ -16,7 +16,10 @@
         "列表列",
         "卡片"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "admin-user-settings-access",
@@ -31,7 +34,8 @@
         "用户头像/姓名",
         "齿轮图标"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "admin-instance-settings-access",
@@ -45,7 +49,8 @@
       "key_elements": [
         "用户图标"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "admin-settings-sidebar-toggle",
@@ -59,7 +64,10 @@
       "key_elements": [
         "条杠箭头图标"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "account-register-email",
@@ -78,7 +86,8 @@
         "Terms of service复选框",
         "Privacy Policy复选框"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "account-register-sso",
@@ -96,7 +105,8 @@
         "GitHub",
         "OIDC"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "import-from-trello",
@@ -114,7 +124,10 @@
         "命名新看板",
         "选择所属项目"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "project-create"
+      ]
     },
     {
       "id": "import-from-4gaboards",
@@ -134,7 +147,10 @@
         "添加项目管理员选项",
         "为不存在的用户创建账号选项"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "project-create"
+      ]
     },
     {
       "id": "export-board",
@@ -150,7 +166,10 @@
         "导出看板选项",
         "保存tgz文件"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "instance-users-list",
@@ -167,7 +186,10 @@
         "列分隔符",
         "显示/隐藏列选项"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "instance-add-user",
@@ -185,7 +207,10 @@
         "姓名输入框",
         "用户名输入框"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "instance-edit-user",
@@ -201,7 +226,10 @@
         "用户个人设置",
         "保存按钮"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "instance-grant-admin",
@@ -216,7 +244,10 @@
         "管理员开关",
         "用户行"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "instance-view-activity-log",
@@ -231,7 +262,10 @@
         "活动日志按钮",
         "用户活动日志列表"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "instance-registration-toggle",
@@ -245,7 +279,10 @@
       "key_elements": [
         "用户注册开关"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "instance-local-registration",
@@ -259,7 +296,10 @@
       "key_elements": [
         "本地用户注册开关"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "instance-sso-registration",
@@ -273,7 +313,10 @@
       "key_elements": [
         "SSO用户注册开关"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "instance-project-creation",
@@ -287,7 +330,10 @@
       "key_elements": [
         "项目创建所有用户开关"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "instance-sync-sso-data",
@@ -301,7 +347,10 @@
       "key_elements": [
         "同步SSO数据开关"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "instance-sync-sso-admin",
@@ -315,7 +364,10 @@
       "key_elements": [
         "同步SSO管理员开关"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "instance-allowed-domains",
@@ -329,7 +381,10 @@
       "key_elements": [
         "允许注册域名输入框"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-instance-settings-access"
+      ]
     },
     {
       "id": "board-create",
@@ -346,7 +401,10 @@
         "模板选择（Simple/Kanban）",
         "导入 CSV 或 JSON 文件"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-create"
+      ]
     },
     {
       "id": "board-edit",
@@ -361,7 +419,10 @@
         "侧边栏省略号菜单",
         "编辑按钮"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "board-delete",
@@ -376,7 +437,10 @@
         "侧边栏省略号菜单",
         "删除按钮"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "board-reorder",
@@ -390,7 +454,10 @@
       "key_elements": [
         "侧边栏中看板名称左侧的双向箭头拖拽手柄"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "board-export-csv",
@@ -405,7 +472,10 @@
         "侧边栏省略号菜单",
         "导出 CSV 选项"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "board-github-integration",
@@ -419,7 +489,10 @@
       "key_elements": [
         "工具栏中的 GitHub 图标"
       ],
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "board-view-toggle",
@@ -435,7 +508,10 @@
         "Board view 选项",
         "List view 选项"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "board-filter",
@@ -455,7 +531,10 @@
         "按截止日期过滤选择器",
         "Show Cards Just For Selected Day 选项"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "board-manage-members",
@@ -471,7 +550,10 @@
         "成员头像图标（点击可修改权限或删除）",
         "权限选择（Project manager/Editor/Commenter/Viewer）"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "notifications-open-panel",
@@ -486,7 +568,8 @@
         "bell icon",
         "notification panel"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "notifications-mark-read-unread",
@@ -502,7 +585,10 @@
         "crossed eye icon",
         "notification dimming"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "notifications-open-panel"
+      ]
     },
     {
       "id": "notifications-delete-single",
@@ -516,7 +602,10 @@
       "key_elements": [
         "bin icon"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "notifications-open-panel"
+      ]
     },
     {
       "id": "notifications-bulk-actions",
@@ -534,7 +623,10 @@
         "delete all",
         "delete read"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "notifications-open-panel"
+      ]
     },
     {
       "id": "notifications-filter",
@@ -555,7 +647,10 @@
         "Card",
         "Text/type of activity"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "notifications-open-panel"
+      ]
     },
     {
       "id": "notifications-fullscreen-center",
@@ -570,7 +665,10 @@
         "icon left of ellipsis",
         "fullscreen Notification Center"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "notifications-open-panel"
+      ]
     },
     {
       "id": "notifications-activity-log-open",
@@ -586,7 +684,10 @@
         "check activity option",
         "Activity Log popup"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "project-settings-access",
@@ -601,7 +702,10 @@
         "齿轮图标",
         "省略号菜单"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-create"
+      ]
     },
     {
       "id": "project-settings-edit-title",
@@ -616,7 +720,10 @@
         "标题输入框",
         "Save按钮"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-settings-access"
+      ]
     },
     {
       "id": "project-settings-manage-managers",
@@ -632,7 +739,10 @@
         "移除管理者按钮",
         "管理者列表"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "project-settings-access"
+      ]
     },
     {
       "id": "project-settings-set-background",
@@ -647,7 +757,10 @@
         "背景图片选择区域",
         "上传按钮"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "project-settings-access"
+      ]
     },
     {
       "id": "project-settings-delete-project",
@@ -662,7 +775,10 @@
         "Delete Project按钮",
         "确认弹窗"
       ],
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "prerequisite_feature_ids": [
+        "project-settings-access"
+      ]
     },
     {
       "id": "project-settings-navigate-back",
@@ -677,7 +793,10 @@
         "箭头图标",
         "4ga Boards Logo"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-settings-access"
+      ]
     },
     {
       "id": "list-view-adjust-column-width",
@@ -692,7 +811,11 @@
         "列分隔线",
         "拖拽"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "board-view-toggle"
+      ]
     },
     {
       "id": "list-view-column-visibility",
@@ -707,7 +830,11 @@
         "Ellipsis菜单",
         "列选择复选框"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "board-view-toggle"
+      ]
     },
     {
       "id": "list-view-reset-default-columns",
@@ -722,7 +849,11 @@
         "Ellipsis菜单",
         "重置选项"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "board-view-toggle"
+      ]
     },
     {
       "id": "list-view-column-fit",
@@ -738,7 +869,11 @@
         "适应内容选项",
         "适应屏幕选项"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "board-view-toggle"
+      ]
     },
     {
       "id": "list-view-single-sort",
@@ -755,7 +890,11 @@
         "升序",
         "降序"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "board-view-toggle"
+      ]
     },
     {
       "id": "list-view-multi-sort",
@@ -771,7 +910,11 @@
         "排序优先级数字",
         "多列选择"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "board-view-toggle"
+      ]
     },
     {
       "id": "list-view-pagination",
@@ -786,7 +929,11 @@
         "每页数量选择器",
         "翻页箭头"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "board-view-toggle"
+      ]
     },
     {
       "id": "list-view-add-list-card",
@@ -801,7 +948,12 @@
         "添加List按钮",
         "添加Card按钮"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "board-view-toggle",
+        "list-create"
+      ]
     },
     {
       "id": "list-view-open-card-by-clicking-row",
@@ -816,7 +968,12 @@
         "卡片行空白区域",
         "卡片详情弹出"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "board-view-toggle",
+        "card-create"
+      ]
     },
     {
       "id": "list-view-sync-board",
@@ -832,7 +989,11 @@
         "列表视图",
         "数据同步"
       ],
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "board-view-toggle"
+      ]
     },
     {
       "id": "list-drag-move",
@@ -847,7 +1008,10 @@
         "列表",
         "拖拽"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "list-create"
+      ]
     },
     {
       "id": "list-horizontal-scroll",
@@ -863,7 +1027,10 @@
         "手形图标",
         "底部滚动条"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "list-create"
+      ]
     },
     {
       "id": "list-vertical-scroll",
@@ -878,7 +1045,10 @@
         "鼠标滚轮",
         "列表右侧滚动条"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "list-create"
+      ]
     },
     {
       "id": "list-toggle-visibility",
@@ -893,7 +1063,10 @@
         "三角形按钮",
         "列表名称左侧"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "list-create"
+      ]
     },
     {
       "id": "list-create",
@@ -909,7 +1082,10 @@
         "Add List按钮",
         "Cancel"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "list-context-menu",
@@ -927,7 +1103,10 @@
         "确认弹窗",
         "Activity"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "list-create"
+      ]
     },
     {
       "id": "list-view-list-column",
@@ -942,7 +1121,12 @@
         "List列",
         "卡片行"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "board-view-toggle",
+        "list-create"
+      ]
     },
     {
       "id": "shortcuts-save-text",
@@ -958,7 +1142,8 @@
         "保存",
         "自动打开卡片视图"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "shortcuts-create-multiple-cards",
@@ -973,7 +1158,8 @@
         "Shift+Enter",
         "创建多个卡片"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "shortcuts-horizontal-scroll",
@@ -988,7 +1174,8 @@
         "Shift+Scroll",
         "水平滚动"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "shortcuts-switch-filter-type",
@@ -1003,7 +1190,8 @@
         "Tab",
         "切换筛选类型"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "project-view-list",
@@ -1018,7 +1206,8 @@
         "dashboard视图",
         "侧边栏"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "project-create",
@@ -1033,7 +1222,8 @@
         "+Add project按钮",
         "命名提示框"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "project-open-context-menu",
@@ -1049,7 +1239,10 @@
         "省略号按钮",
         "上下文菜单"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-create"
+      ]
     },
     {
       "id": "project-rename",
@@ -1065,7 +1258,10 @@
         "重命名选项",
         "名称输入框"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-open-context-menu"
+      ]
     },
     {
       "id": "project-settings",
@@ -1081,7 +1277,10 @@
         "设置选项",
         "项目设置页面"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-open-context-menu"
+      ]
     },
     {
       "id": "project-activity",
@@ -1097,7 +1296,10 @@
         "活动选项",
         "活动信息"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-open-context-menu"
+      ]
     },
     {
       "id": "project-add-board",
@@ -1112,7 +1314,10 @@
         "上下文菜单",
         "添加看板选项"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "project-open-context-menu"
+      ]
     },
     {
       "id": "project-enter-board",
@@ -1128,7 +1333,10 @@
         "侧边栏项目名称",
         "看板视图"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-create"
+      ]
     },
     {
       "id": "project-return-dashboard",
@@ -1142,7 +1350,8 @@
       "key_elements": [
         "4ga Boards标志"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "sidebar-width",
@@ -1157,7 +1366,10 @@
         "个人设置页面",
         "侧边栏宽度滑块/输入框"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "sidebar-toggle",
@@ -1173,7 +1385,8 @@
         "箭头图标",
         "侧边栏"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "sidebar-filter",
@@ -1189,7 +1402,10 @@
         "过滤切换图标（P/B）",
         "清除过滤按钮（x）"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-create"
+      ]
     },
     {
       "id": "sidebar-expand-collapse-project",
@@ -1204,7 +1420,10 @@
         "项目名称左侧三角按钮",
         "板块列表"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-create"
+      ]
     },
     {
       "id": "sidebar-navigate",
@@ -1220,7 +1439,10 @@
         "板块名称",
         "高亮样式"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-create"
+      ]
     },
     {
       "id": "sidebar-edit-menu",
@@ -1235,7 +1457,10 @@
         "三点菜单按钮",
         "编辑选项"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-create"
+      ]
     },
     {
       "id": "sidebar-add-project-board",
@@ -1251,7 +1476,8 @@
         "+ Add board 按钮",
         "权限控制"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "card-create",
@@ -1271,7 +1497,10 @@
         "Ctrl+Enter",
         "Shift+Enter"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "list-create"
+      ]
     },
     {
       "id": "card-move",
@@ -1288,7 +1517,10 @@
         "卡片视图中的列表下拉",
         "列表视图中的列表列"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-delete",
@@ -1304,7 +1536,10 @@
         "卡片视图右上角 bin 图标",
         "弹出确认框"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-edit-title",
@@ -1319,7 +1554,10 @@
         "卡片标题",
         "回车键"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-assign-members",
@@ -1335,7 +1573,10 @@
         "卡片视图成员区域的加号",
         "成员复选框"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-manage-labels",
@@ -1353,7 +1594,10 @@
         "Create new label",
         "标签编辑铅笔图标"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-set-due-date",
@@ -1369,7 +1613,10 @@
         "卡片视图截止日期的加号/铅笔图标",
         "日期选择器"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-use-timer",
@@ -1386,7 +1633,10 @@
         "计时器编辑铅笔图标",
         "重置"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-duplicate",
@@ -1400,7 +1650,10 @@
       "key_elements": [
         "卡片菜单中的 Duplicate card"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-copy-link",
@@ -1414,7 +1667,10 @@
       "key_elements": [
         "卡片菜单中的 Copy a link to a card"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-view-activity",
@@ -1430,7 +1686,10 @@
         "卡片视图的活动日志",
         "注释中的 waveform 图标"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-toggle-notifications",
@@ -1444,7 +1703,10 @@
       "key_elements": [
         "卡片视图中的 Bell 图标"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-toggle-sections",
@@ -1458,7 +1720,10 @@
       "key_elements": [
         "区域标题旁的 - 和 + 图标"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-edit-description",
@@ -1474,7 +1739,10 @@
         "Save 按钮",
         "Ctrl+Enter"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-manage-tasks",
@@ -1492,7 +1760,10 @@
         "任务 ellipsis 菜单（delete, duplicate, edit due date, edit members, check activity）",
         "列表视图中的三角形切换可见性"
       ],
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-manage-attachments",
@@ -1511,7 +1782,10 @@
         "Remove cover 按钮",
         "附件上的铅笔图标 -> Delete attachment"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-manage-comments",
@@ -1529,7 +1803,10 @@
         "评论删除 bin 图标",
         "波形活动图标"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-text-format",
@@ -1554,7 +1831,10 @@
         "勾选列表 (Ctrl+Shift+C)",
         "表格按钮"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-text-insert",
@@ -1574,7 +1854,10 @@
         "添加彩色文本按钮",
         "添加注释 (Ctrl+/)"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "card-text-view",
@@ -1593,7 +1876,10 @@
         "拖动右下角调整大小",
         "帮助按钮"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "card-create"
+      ]
     },
     {
       "id": "settings-edit-profile",
@@ -1611,7 +1897,10 @@
         "组织名称输入框",
         "保存按钮"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-language",
@@ -1625,7 +1914,10 @@
       "key_elements": [
         "语言下拉选择器"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-theme",
@@ -1640,7 +1932,10 @@
         "主题选择下拉菜单",
         "自定义主题编辑器"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-theme-shape",
@@ -1654,7 +1949,10 @@
       "key_elements": [
         "主题形状选择器（方形/圆角）"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-preferred-details-font",
@@ -1668,7 +1966,10 @@
       "key_elements": [
         "字体选择下拉菜单（默认/等宽）"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-default-view",
@@ -1682,7 +1983,10 @@
       "key_elements": [
         "默认视图选择按钮（看板视图/列表视图）"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-compact-sidebar",
@@ -1696,7 +2000,10 @@
       "key_elements": [
         "紧凑侧边栏开关"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-list-view-style",
@@ -1710,7 +2017,10 @@
       "key_elements": [
         "列表视图样式选择按钮（紧凑/默认）"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-users-settings-style",
@@ -1724,7 +2034,10 @@
       "key_elements": [
         "用户设置样式选择按钮（紧凑/默认）"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-hide-card-modal-activity",
@@ -1739,7 +2052,10 @@
         "隐藏卡片模态活动日志开关",
         "隐藏最近截止日期开关"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-notification-subscriptions",
@@ -1757,7 +2073,10 @@
         "订阅用户通知开关",
         "订阅实例通知开关"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-account-info",
@@ -1774,7 +2093,10 @@
         "当前密码输入框",
         "保存按钮"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-change-password",
@@ -1791,7 +2113,10 @@
         "确认新密码输入框",
         "保存按钮"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "settings-import-getting-started",
@@ -1805,7 +2130,10 @@
       "key_elements": [
         "导入入门项目按钮"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "prerequisite_feature_ids": [
+        "admin-user-settings-access"
+      ]
     },
     {
       "id": "view-dashboard",
@@ -1820,7 +2148,8 @@
         "Dashboard view",
         "项目概览"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": []
     },
     {
       "id": "view-project",
@@ -1835,7 +2164,10 @@
         "Project view",
         "项目详情"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "project-create"
+      ]
     },
     {
       "id": "view-board",
@@ -1852,7 +2184,10 @@
         "列表",
         "卡片"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create"
+      ]
     },
     {
       "id": "view-board-with-opened-card",
@@ -1868,7 +2203,11 @@
         "打开卡片视图",
         "卡片详情"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "prerequisite_feature_ids": [
+        "board-create",
+        "card-create"
+      ]
     }
   ]
 }
