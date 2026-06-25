@@ -14,6 +14,7 @@ export const FeaturePointSchema = z.object({
   source_section: z.string().default(""),
   key_elements: z.array(z.string()).default([]),
   difficulty: z.string().default("easy"),
+  prerequisite_feature_ids: z.array(z.string()).default([]),
 });
 export type FeaturePoint = z.infer<typeof FeaturePointSchema>;
 

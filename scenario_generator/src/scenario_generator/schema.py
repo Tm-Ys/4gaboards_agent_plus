@@ -29,6 +29,7 @@ class FeaturePoint(BaseModel):
         default_factory=list, description="参与该功能的可观察 UI 元素 / 关键操作"
     )
     difficulty: str = Field("easy", description="easy | medium | hard")
+    prerequisite_feature_ids: list[str] = []
 
 
 class ModuleFeatureResult(BaseModel):
