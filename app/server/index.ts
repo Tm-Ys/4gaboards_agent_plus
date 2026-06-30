@@ -9,10 +9,10 @@ import "dotenv/config";
 import catalog from "./routes/catalog";
 import reports from "./routes/reports";
 import runScenarioRoute from "./routes/runScenario";
-import regenerateRoute from "./routes/regenerate";
+import baselineRoute from "./routes/baseline";
 import batchRoute from "./routes/batch";
 import mutationRoute from "./routes/mutation";
-import { current as currentLock } from "./lib/lock";
+import { current as currentLock, forceRelease as forceReleaseLock } from "./lib/lock";
 
 const app = new Hono();
 
@@ -21,12 +21,19 @@ app.route("/api/scenarios", catalog);
 app.route("/api", reports);
 // 交互（SSE）
 app.route("/api/run", runScenarioRoute);
-app.route("/api/regenerate", regenerateRoute);
+app.route("/api/baseline", baselineRoute);
 app.route("/api/batch", batchRoute);
 app.route("/api/mutation", mutationRoute);
 
 // 当前在跑任务（前端据此禁用 Run 按钮）
 app.get("/api/runlock", (c) => c.json({ running: currentLock() }));
+
+// 强制清锁（前端「强制解锁」按钮）：应对请求卡死/僵尸锁。仅清理锁状态，不杀后端进程。
+app.post("/api/runlock/clear", (c) => {
+  const before = currentLock();
+  forceReleaseLock();
+  return c.json({ cleared: !!before, running: currentLock() });
+});
 
 // 生产：托管前端构建产物（仅当 web/dist 存在；开发期前端走 vite 5173）
 if (fs.existsSync("./web/dist")) {
