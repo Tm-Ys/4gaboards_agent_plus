@@ -43,6 +43,15 @@ body {
   color: var(--ink-900);
   letter-spacing: 0.01em;
 }
+.btn--unlock {
+  margin-left: auto;
+  background: color-mix(in srgb, var(--warn) 18%, transparent);
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 50%, transparent);
+}
+.btn--unlock:hover {
+  background: color-mix(in srgb, var(--warn) 30%, transparent);
+}
 .topbar__sub {
   font-size: 13px;
   color: var(--ink-500);
@@ -462,6 +471,223 @@ body {
   font-size: 12px;
   color: var(--ink-500);
   font-family: var(--font-mono);
+}
+
+/* 任务二：基准 + 模块链新流程 */
+.task2 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--paper-edge);
+}
+.task2__warn {
+  font-size: 11px;
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+}
+.task2__baseline {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.task2__bs-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.task2__bs-done {
+  font-size: 12px;
+  color: var(--good);
+  font-family: var(--font-mono);
+}
+.task2__modules {
+  border-top: 1px dashed var(--paper-edge);
+  padding-top: 8px;
+}
+.task2__modules-title {
+  font-size: 12px;
+  color: var(--ink-600);
+  margin-bottom: 6px;
+}
+.task2__module-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.btn--module {
+  font-family: var(--font-mono);
+}
+.task2__module-cnt {
+  opacity: 0.6;
+  font-size: 10px;
+}
+.task2__chain {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.task2__chain-launch {
+  border-top: 1px dashed var(--paper-edge);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.task2__chain-sel {
+  font-size: 12px;
+  color: var(--ink-600);
+  font-family: var(--font-mono);
+}
+.task2__chain-sel b {
+  color: var(--clay-deep);
+}
+.task2__chain-hint {
+  font-size: 11px;
+  color: var(--warn);
+}
+
+/* 任务一：测试链目录 */
+.chain-dir {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chain-dir__items {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.chain {
+  border: 1px solid var(--paper-edge);
+  border-radius: var(--radius-sm);
+  background: var(--paper-bg);
+  overflow: hidden;
+}
+.chain.is-sel {
+  border-color: var(--clay);
+  box-shadow: 0 0 0 1px var(--clay) inset;
+}
+.chain__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px;
+  cursor: default;
+}
+.chain__head--baseline {
+  background: color-mix(in srgb, var(--clay) 8%, transparent);
+}
+.chain__toggle {
+  cursor: pointer;
+  color: var(--ink-500);
+  width: 14px;
+  text-align: center;
+  user-select: none;
+}
+.chain__icon {
+  font-size: 13px;
+}
+.chain__name {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--ink-800);
+  font-weight: 600;
+}
+.chain__name-btn {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--ink-800);
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+.chain__name-btn:hover {
+  background: color-mix(in srgb, var(--clay) 15%, transparent);
+}
+.chain__name-btn.is-sel {
+  background: var(--clay);
+  color: #fff;
+}
+.chain__cnt {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+}
+.chain__body {
+  padding: 10px 12px 12px 30px;
+  border-top: 1px dashed var(--paper-edge);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chain__step {
+  font-size: 12px;
+  color: var(--ink-700);
+  font-family: var(--font-mono);
+}
+.chain__hint {
+  font-size: 11px;
+  color: var(--ink-500);
+  font-style: italic;
+}
+.chain__feat-order {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--ink-600);
+  line-height: 1.6;
+  word-break: break-word;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--paper-edge);
+}
+.chain__arrow {
+  color: var(--clay);
+}
+.chain__scen-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  /* 嵌套可滚动预览容器：占任务一窗口的大部分高度，剩余在里面滚轮浏览。
+     用 vh 相对视口，展开链时一眼能看完大部分场景。 */
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.chain__scen-list::-webkit-scrollbar {
+  width: 7px;
+}
+.chain__scen-list::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ink-500) 35%, transparent);
+  border-radius: 4px;
+}
+.chain__scen-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chain-dir__all-toggle {
+  align-self: flex-start;
+  font-size: 11px;
+  color: var(--ink-500);
+  background: none;
+  border: 1px dashed var(--paper-edge);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.chain-dir__all-toggle:hover {
+  color: var(--ink-700);
+  border-color: var(--ink-500);
+}
+.chain-dir__flat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
 }
 
 /* Timeline + Trace */

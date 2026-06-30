@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
+import { UnlockButton } from "./components/UnlockButton";
 import { ScenarioList } from "./components/ScenarioList";
-import { RunPanel } from "./components/RunPanel";
-import { Timeline } from "./components/Timeline";
-import { BatchLauncher } from "./components/BatchLauncher";
+import { Task2Panel } from "./components/Task2Panel";
 import { BatchReportView } from "./components/BatchReportView";
 import { MutationLauncher } from "./components/MutationLauncher";
 import { MutationReportView } from "./components/MutationReportView";
@@ -15,16 +14,14 @@ export function App() {
       <header className="topbar">
         <h1 className="topbar__title">4gaBoards 测试智能体</h1>
         <span className="topbar__sub">场景生成 · ReAct 执行 · 变异与判官</span>
+        <UnlockButton />
       </header>
       <main className="board">
-        <Column title="任务一" subtitle="场景目录">
+        <Column title="任务一" subtitle="测试链目录">
           <ScenarioList />
         </Column>
-        <Column title="任务二" subtitle="执行与轨迹">
-          <RunPanel />
-          <Timeline />
-          <hr className="col-divider" />
-          <BatchLauncher />
+        <Column title="任务二" subtitle="基准与执行链">
+          <Task2Panel />
           <hr className="col-divider" />
           <BatchReportView />
         </Column>

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { postSSE } from "../api/client";
+import { useBaseline } from "./useBaseline";
 import type { ReActStep } from "../types";
 
 interface OutcomeLite {
@@ -26,7 +27,7 @@ interface BatchState {
   result: BatchResult | null;
   error: string | null;
   toggleDiff: (d: "easy" | "medium" | "hard") => void;
-  run: (ids: string[]) => Promise<void>;
+  run: (ids: string[], opts?: { module?: string; sessionToken?: string }) => Promise<void>;
   reset: () => void;
 }
 
@@ -41,7 +42,7 @@ export const useBatch = create<BatchState>((set) => ({
   result: null,
   error: null,
   toggleDiff: (d) => set((s) => ({ difficulties: { ...s.difficulties, [d]: !s.difficulties[d] } })),
-  run: async (ids) => {
+  run: async (ids, opts) => {
     set({
       status: "running",
       index: 0,
@@ -53,7 +54,7 @@ export const useBatch = create<BatchState>((set) => ({
       error: null,
     });
     try {
-      await postSSE("/api/batch", { ids }, {
+      await postSSE("/api/batch", { ids, module: opts?.module, sessionToken: opts?.sessionToken }, {
         step: (d) => {
           const p = d as { scenarioId: string; step: ReActStep };
           set((s) =>
@@ -75,7 +76,13 @@ export const useBatch = create<BatchState>((set) => ({
         error: (e) => set({ status: "error", error: (e as { message?: string }).message ?? String(e) }),
       });
     } catch (e) {
-      set({ status: "error", error: e instanceof Error ? e.message : String(e) });
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ status: "error", error: msg });
+      // 会话过期（后端重启/超时清池）：基准 token 已失效，重置基准状态，
+      // 让 UI 引导用户重新执行基准，而不是拿着废 token 反复 410。
+      if (/session|expired|410/i.test(msg)) {
+        useBaseline.getState().reset();
+      }
     }
   },
   reset: () =>
