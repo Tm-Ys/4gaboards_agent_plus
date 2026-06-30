@@ -11,6 +11,7 @@ import { settings } from "../../config";
 import { loadScenarioSet } from "../../scenarioStore";
 import { parseArgs } from "../../cli";
 import { runBatch } from "../runner/runBatch";
+import { DependencyGraph } from "../dependencyGraph";
 
 function csv(v: string | boolean | undefined): Set<string> | undefined {
   if (typeof v !== "string") return undefined;
@@ -21,20 +22,31 @@ function pct(n: number, d: number): string {
   return d ? `${((n / d) * 100).toFixed(0)}%` : "-";
 }
 
+/** 由 feature_id 反查其所属 module（场景无 module 字段，需经 feature 目录解析）。 */
+function featureModule(
+  features: { id: string; module: string }[],
+  featureId: string,
+): string | undefined {
+  return features.find((f) => f.id === featureId)?.module;
+}
+
 async function main(): Promise<number> {
   const args = parseArgs(process.argv.slice(2));
   const setName = typeof args.set === "string" ? args.set : "basic";
   const maxSteps = typeof args.maxSteps === "string" ? Number(args.maxSteps) || 20 : 20;
-  const { scenarios } = loadScenarioSet(setName);
+  const set = loadScenarioSet(setName);
+  const { scenarios, features } = set;
   let list = [...scenarios.scenarios];
 
   const diffSet = csv(args.difficulty);
   const tagSet = csv(args.tag);
   const feature = typeof args.feature === "string" ? args.feature : undefined;
+  const module = typeof args.module === "string" ? args.module : undefined;
   const filter: Record<string, unknown> = {};
   if (diffSet) { filter.difficulty = [...diffSet]; list = list.filter((s) => diffSet.has(s.difficulty)); }
   if (tagSet) { filter.tag = [...tagSet]; list = list.filter((s) => s.tags.some((t) => tagSet.has(t))); }
   if (feature) { filter.feature = feature; list = list.filter((s) => s.feature_id.startsWith(feature)); }
+  if (module) { filter.module = module; list = list.filter((s) => featureModule(features.feature_points, s.feature_id) === module); }
   if (typeof args.limit === "string") {
     const n = Number(args.limit) || list.length;
     list = list.slice(0, n);
@@ -42,18 +54,25 @@ async function main(): Promise<number> {
   }
 
   console.log(`▶ 批量运行：集="${setName}" 共 ${list.length} 个场景；maxSteps=${maxSteps}`);
-  console.log(`  过滤：${JSON.stringify(filter)}`);
+  console.log(`  过滤：${JSON.stringify(filter)}${module ? `（模块链模式：${module}）` : ""}`);
   if (list.length === 0) {
     console.log("没有匹配的场景。");
     return 0;
   }
   console.log("");
 
+  // module 模式构造依赖图（用于拓扑排序场景链）。
+  const depGraph = module ? new DependencyGraph(features.feature_points) : undefined;
+
   const t0 = Date.now();
   const report = await runBatch(list, {
     maxSteps,
     setName,
     filter,
+    module,
+    depGraph,
+    scenarioLookup: scenarios.scenarios,
+    features,
     onProgress: (i, n, o) => {
       const tag = o.result
         ? `${o.result.verdict.pass ? "✅ PASS" : "❌ FAIL"} — ${o.result.verdict.reason.slice(0, 70)}`

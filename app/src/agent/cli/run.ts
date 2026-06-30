@@ -12,6 +12,7 @@ import { loadScenarioSet } from "../../scenarioStore";
 import { parseArgs } from "../../cli";
 import { runScenario } from "../runner/runScenario";
 import { resetAccountLanguage } from "../runner/resetState";
+import { DependencyGraph } from "../dependencyGraph";
 
 function pickScenario(
   scenarios: { id: string; feature_id: string; tags: string[]; title: string }[],
@@ -30,7 +31,8 @@ function pickScenario(
 async function main(): Promise<number> {
   const args = parseArgs(process.argv.slice(2));
   const setName = typeof args.set === "string" ? args.set : "basic";
-  const { scenarios } = loadScenarioSet(setName);
+  const set = loadScenarioSet(setName);
+  const { scenarios, features } = set;
   const list = scenarios.scenarios;
 
   if (args.list) {
@@ -51,12 +53,20 @@ async function main(): Promise<number> {
 
   const maxSteps = typeof args.maxSteps === "string" ? Number(args.maxSteps) || 20 : 20;
   const headless = args.headed === true ? false : true;
+  const autoSetup = args["auto-setup"] === true || args.autoSetup === true;
 
   console.log(`▶ 运行场景：${full.id}（${full.title}）`);
-  console.log(`  headless=${headless}, maxSteps=${maxSteps}\n`);
+  console.log(`  headless=${headless}, maxSteps=${maxSteps}${autoSetup ? ", autoSetup=on" : ""}\n`);
 
   const cleanup = args.reset === true ? resetAccountLanguage : undefined;
-  const result = await runScenario(full, { headless, maxSteps, cleanup });
+  const result = await runScenario(full, {
+    headless,
+    maxSteps,
+    cleanup,
+    autoSetup,
+    depGraph: autoSetup ? new DependencyGraph(features.feature_points) : undefined,
+    scenarioLookup: autoSetup ? list : undefined,
+  });
 
   // 落盘轨迹
   const runsDir = path.join(settings.outputsDir, "runs");
