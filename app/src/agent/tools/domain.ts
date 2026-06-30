@@ -146,14 +146,17 @@ async function readEditorMode(
 registry.register({
   name: "auth_login",
   layer: "A",
-  description: "用 .env 凭据登录 4gaBoards demo（走真实登录表单：填 email/username + password 并提交）。",
+  description: "用 .env 凭据登录 4gaBoards demo（走真实登录表单：填 email/username + password 并提交）。若账号不存在（demo 站清理过闲置账号），自动用同组凭据注册后再登录。",
   params: z.object({}),
   run: async (_args, ctx) => {
     await ctx.session.login();
     const o = await ctx.session.observe();
+    const loggedIn = !o.url.includes("/login");
     return {
-      ok: true,
-      summary: `已登录 4gaBoards；URL=${o.url}，可见 ${o.elements.length} 个元素`,
+      ok: loggedIn,
+      summary: loggedIn
+        ? `已登录 4gaBoards；URL=${o.url}，可见 ${o.elements.length} 个元素`
+        : `登录失败：仍停在登录页（URL=${o.url}）`,
       data: { url: o.url },
     };
   },

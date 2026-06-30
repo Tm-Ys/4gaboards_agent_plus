@@ -18,6 +18,12 @@ export function release(): void {
   running = null;
 }
 
+/** 强制清锁（前端「强制解锁」按钮用）：仅清锁状态，不中断后端正在跑的请求。
+ * 用于应对请求卡死/僵尸锁。注意：若原请求还在真的跑浏览器操作，清锁后可能并发，应仅在确认卡死时用。 */
+export function forceRelease(): void {
+  running = null;
+}
+
 export function current(): Running | null {
   return running;
 }
