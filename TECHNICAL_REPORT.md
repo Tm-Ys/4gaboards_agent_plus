@@ -122,6 +122,7 @@ Web Agent 在 WebArena 等基准上失败率高，原因：
 - **strict 判官变体**：逐条核对 + 终态优先 + must-have/nice-to-have 分类 + 跨语言强映射。
 - **实测 Layer1 board-create**：lenient **0/14（must-kill 0%）** → strict **8/14（must-kill 38%）**。entity-swap 0→67%、state-swap 0→100%、soft 类 0→75-100%；negate 仍 0%（弱点）。
 - **宽松代价**（30 场景零浏览器重判）：真实 PASS 率 lenient **46%** / strict **25%**，**strict 误杀 7 个真实通过（-21pp）**——约 2 个真问题 + 约 5 个 strict 太严。
+- **复现验证（2026-07-07）**：`board-create-happy-path × --judge both` 实跑，Layer1 must-kill lenient **0/8 (0%)** → strict **3/8 (38%)** 稳定复现（entity-swap 0→67%、negate 0→25% 仍弱）；Layer2 exec-failure lenient 漏检 / strict 检出。结论可复现，详见《变异测试设计》§7。
 
 ### 4.8 健壮性（P4）
 - **状态隔离**：每场景恢复账号级 state（如语言），settings 簇 68%→**84%**；
